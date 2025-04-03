@@ -56,9 +56,17 @@ const ProfileScreen = ({ navigation }) => {
       {/* Верхняя строка */}
       <View style={styles.header}>
         <Text style={styles.userName}>{user ? user.name : "Гость"}</Text>
-        <TouchableOpacity onPress={() => navigation.navigate("Settings")}>
-          <Ionicons name="settings-outline" size={24} color="black" />
-        </TouchableOpacity>
+        
+        <View style={styles.iconContainer}>
+          {user?.role === "admin" && (
+            <TouchableOpacity onPress={() => navigation.navigate("AdminPanel")}>
+              <Ionicons name="key-outline" size={24} color="#FF6600" style={styles.adminIcon} />
+            </TouchableOpacity>
+          )}
+          <TouchableOpacity onPress={() => navigation.navigate("Settings")}>
+            <Ionicons name="settings-outline" size={24} color="black" />
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Аватар */}
@@ -132,6 +140,13 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "bold",
   },
+  iconContainer: {
+    flexDirection: "row",
+    gap: 15,
+  },
+  adminIcon: {
+    marginRight: 10,
+  },
   avatarCircle: {
     width: 120,
     height: 120,
@@ -168,11 +183,13 @@ const styles = StyleSheet.create({
     backgroundColor: "#FF4444",
     borderRadius: 10,
     alignSelf: "center",
+    marginBottom: 30,
   },
   logoutText: {
     fontSize: 16,
     fontWeight: "600",
     color: "#FFF",
+    
   },
   registerButton: {
     backgroundColor: "#FF6600",
@@ -189,4 +206,3 @@ const styles = StyleSheet.create({
 });
 
 export default ProfileScreen;
- 

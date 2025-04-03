@@ -16,6 +16,8 @@ import AdminProductsScreen from "./screens/AdminProductsScreen";
 import AdminStatisticsScreen from "./screens/AdminStatisticsScreen";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import AdminUserDetailsScreen from "./components/AdminUserDetails";
+import CategoryScreen from "./screens/categoryScreens";
+import SubcategoriesScreen from "./screens/CateGor";
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 

@@ -10,9 +10,12 @@ const authRoutes = require('./routes/authRoutes');
 const productRoutes = require('./routes/productRoutes');
 const authenticateUser = require('./middleware/authMiddleware');
 const userRoutes = require('./routes/userRoutes');
+const categoryRoutes = require("./routes/categoryRoutes");
+const adminRoutes = require("./routes/adminRoutes");
+const subcategoryRoutes = require('./routes/subcategoryRoutes');
 sequelize.sync().then(() => console.log("✅ Таблица пользователей обновлена"));
 
-const adminRoutes = require("./routes/adminRoutes");
+
 
 
 const app = express();
@@ -20,9 +23,13 @@ app.use(express.json());
 app.use(cors());
 app.use("/admin", adminRoutes);
 app.use('/auth', authRoutes); 
-
+app.use('/category', categoryRoutes);
+app.use('/subcategory', subcategoryRoutes);
 app.use('/products', productRoutes); 
 app.use('/user', userRoutes);
+
+
+
 
 
 
