@@ -1,9 +1,8 @@
+// routes/products.js
 const express = require('express');
 const router = express.Router();
-const productController = require('../controllers/productController.js');
+const productController = require('../controllers/productController');
 
-console.log(productController);
-router.get('/', productController.getProducts);
+router.get('/products/:subcategoryId', productController.getProductsBySubcategory);
 
-
-module.exports = router; // <-- Должно быть!
+module.exports = router;

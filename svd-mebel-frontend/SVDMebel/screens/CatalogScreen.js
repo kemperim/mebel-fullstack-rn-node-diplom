@@ -1,7 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, ActivityIndicator, StyleSheet, TouchableOpacity, Image, Dimensions } from 'react-native';
+import {
+  View,
+  Text,
+  FlatList,
+  ActivityIndicator,
+  StyleSheet,
+  TouchableOpacity,
+  Image,
+  Dimensions
+} from 'react-native';
 import axios from 'axios';
-import Icon from 'react-native-vector-icons/Feather';  // Импорт иконок
 
 const { width } = Dimensions.get('window');
 
@@ -9,9 +17,12 @@ const CatalogScreen = () => {
   const [categories, setCategories] = useState([]);
   const [allSubcategories, setAllSubcategories] = useState([]);
   const [filteredSubcategories, setFilteredSubcategories] = useState([]);
+  const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [productLoading, setProductLoading] = useState(false);
   const [error, setError] = useState('');
   const [selectedCategory, setSelectedCategory] = useState(null);
+  const [selectedSubcategory, setSelectedSubcategory] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -21,11 +32,15 @@ const CatalogScreen = () => {
           axios.get('http://192.168.8.100:5000/subcategory'),
         ]);
 
-        setCategories(catRes.data);
-        setAllSubcategories(subcatRes.data);
+        if (catRes.data && subcatRes.data) {
+          setCategories(catRes.data);
+          setAllSubcategories(subcatRes.data);
+        } else {
+          throw new Error('Данные пусты');
+        }
       } catch (err) {
-        console.error('Ошибка загрузки:', err);
-        setError('Не удалось загрузить данные');
+        console.error('Ошибка загрузки данных:', err);
+        setError('Не удалось загрузить данные. Попробуйте позже.');
       } finally {
         setLoading(false);
       }
@@ -36,6 +51,8 @@ const CatalogScreen = () => {
 
   const handleCategorySelect = (categoryId, categoryName) => {
     setSelectedCategory({ id: categoryId, name: categoryName });
+    setSelectedSubcategory(null);
+    setProducts([]);
     const filtered = allSubcategories.filter(sub => sub.category_id === categoryId);
     setFilteredSubcategories(filtered);
   };
@@ -43,6 +60,25 @@ const CatalogScreen = () => {
   const handleBackToCategories = () => {
     setSelectedCategory(null);
     setFilteredSubcategories([]);
+    setProducts([]);
+    setSelectedSubcategory(null);
+  };
+
+  const handleSubcategoryPress = async (subcategory) => {
+    console.log('Выбрана подкатегория с ID:', subcategory.id); // ← вот сюда
+    setSelectedSubcategory(subcategory);
+    setProductLoading(true);
+    try {
+      // Используем правильный формат URL для запроса товаров
+      const res = await axios.get(`http://192.168.8.100:5000/products/products/subcategory_id=${subcategory.id}`);
+      console.log('Ответ от сервера с товарами:', res.data); // Добавь лог для ответа от сервера
+      setProducts(res.data);
+    } catch (err) {
+      console.error('Ошибка загрузки товаров:', err);
+      setError('Не удалось загрузить товары');
+    } finally {
+      setProductLoading(false);
+    }
   };
 
   if (loading) {
@@ -72,26 +108,44 @@ const CatalogScreen = () => {
           )}
         />
       ) : (
-        <View style={styles.subcategoryContainer}>
+        <View>
           <TouchableOpacity onPress={handleBackToCategories} style={styles.backButton}>
-            <Text style={styles.backButtonText}>Вернуться к категориям</Text>
+            <Text style={styles.backButtonText}>← Назад к категориям</Text>
           </TouchableOpacity>
 
-          {/* Название категории */}
           <Text style={styles.categoryTitle}>{selectedCategory.name}</Text>
 
-          {filteredSubcategories.length === 0 ? (
-            <Text style={styles.noSub}>Нет подкатегорий</Text>
+          <FlatList
+            data={filteredSubcategories}
+            horizontal
+            keyExtractor={item => item.id.toString()}
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ paddingVertical: 10 }}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                style={[styles.subcategoryButton, selectedSubcategory?.id === item.id && styles.activeSubcategory]}
+                onPress={() => handleSubcategoryPress(item)}
+              >
+                <Text style={styles.subcategoryButtonText}>{item.name}</Text>
+              </TouchableOpacity>
+            )}
+          />
+
+          {productLoading ? (
+            <ActivityIndicator size="large" color="#FF7043" style={{ marginTop: 20 }} />
+          ) : products.length === 0 ? (
+            <Text style={styles.noSub}>Нет товаров</Text>
           ) : (
             <FlatList
-              data={filteredSubcategories}
+              data={products}
               keyExtractor={item => item.id.toString()}
+              numColumns={2}
+              contentContainerStyle={{ paddingBottom: 40 }}
               renderItem={({ item }) => (
-                <View style={styles.subcategoryItem}>
-                  <Image source={{ uri: item.image }} style={styles.subcategoryImage} />
-                  <View style={styles.subcategoryText}>
-                    <Text style={styles.subcategoryName}>{item.name}</Text>
-                  </View>
+                <View style={styles.productItem}>
+                  <Image source={{ uri: item.image }} style={styles.productImage} />
+                  <Text style={styles.productName}>{item.name}</Text>
+                  <Text style={styles.productPrice}>{item.price} ₸</Text>
                 </View>
               )}
             />
@@ -143,55 +197,73 @@ const styles = StyleSheet.create({
     color: '#777',
     marginTop: 4,
   },
-  subcategoryContainer: {
-    marginTop: 20,
+  backButton: {
+    marginBottom: 16,
+    padding: 10,
+    backgroundColor: '#FF7043',
+    borderRadius: 8,
+    alignSelf: 'flex-start',
+  },
+  backButtonText: {
+    color: '#fff',
+    fontSize: 16,
   },
   categoryTitle: {
     fontSize: 24,
     fontWeight: 'bold',
+    marginBottom: 12,
     color: '#333',
-    marginBottom: 20,
   },
-  header: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    marginBottom: 10,
+  subcategoryButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    backgroundColor: '#eee',
+    borderRadius: 20,
+    marginRight: 10,
   },
-  subcategoryItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF', // белый фон
-    marginBottom: 16,
+  activeSubcategory: {
+    backgroundColor: '#FF7043',
+  },
+  subcategoryButtonText: {
+    fontSize: 16,
+    color: '#333',
+  },
+  noSub: {
+    textAlign: 'center',
+    color: '#666',
+    marginTop: 20,
+    fontSize: 16,
+  },
+  productItem: {
+    width: (width / 2) - 24,
+    backgroundColor: '#fff',
     borderRadius: 12,
-    overflow: 'hidden',
+    padding: 10,
+    margin: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.05,
     shadowRadius: 4,
-    elevation: 3, // тень на Android
-    height: 80,
+    elevation: 2,
+    alignItems: 'center',
   },
-
-  subcategoryImage: {
-    width: 50,
-    height: 50,
-    borderTopLeftRadius: 12,
-    borderBottomLeftRadius: 12,
-    marginStart: 12,
+  productImage: {
+    width: '100%',
+    height: 120,
+    borderRadius: 8,
   },
-
-  subcategoryText: {
-    padding: 12,
-    flex: 1,
-    justifyContent: 'center',
-  },
-
-  subcategoryName: {
-    fontSize: 18,
-    fontWeight: '700',
+  productName: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginTop: 8,
+    textAlign: 'center',
     color: '#333',
   },
-
+  productPrice: {
+    fontSize: 14,
+    color: '#777',
+    marginTop: 4,
+  },
   loader: {
     flex: 1,
     justifyContent: 'center',
@@ -201,26 +273,6 @@ const styles = StyleSheet.create({
     color: 'red',
     textAlign: 'center',
     marginTop: 10,
-  },
-  backButton: {
-    flexDirection: 'row', // для выравнивания стрелки и текста
-    alignItems: 'center',
-    marginBottom: 16,
-    padding: 10,
-    backgroundColor: '#FF7043', // оранжевый цвет
-    borderRadius: 8,
-    justifyContent: 'center',
-  },
-  backButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    marginLeft: 8, // расстояние между стрелкой и текстом
-  },
-  noSub: {
-    textAlign: 'center',
-    color: '#666',
-    marginTop: 10,
-    fontSize: 16,
   },
 });
 

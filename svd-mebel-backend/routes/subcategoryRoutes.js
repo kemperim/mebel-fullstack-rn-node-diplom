@@ -1,5 +1,5 @@
 const express = require('express');
-const { Subcategory } = require('../models/Subcategory');
+const { Subcategory } = require('../models');
 const router = express.Router();
 
 // Получение всех подкатегорий

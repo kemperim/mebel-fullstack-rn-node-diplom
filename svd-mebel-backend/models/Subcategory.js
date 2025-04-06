@@ -19,11 +19,19 @@ const Subcategory = sequelize.define('Subcategory', {
   },
   image: {
     type: DataTypes.STRING,
-    allowNull: true, // если картинка не обязательна
+    allowNull: true,
   },
 }, {
   tableName: 'subcategories',
   timestamps: false,
 });
 
-module.exports = { Subcategory };
+// 👇 Добавим метод для ассоциации
+Subcategory.associate = ({ Category }) => {
+  Subcategory.belongsTo(Category, {
+    foreignKey: 'category_id',
+    as: 'category',
+  });
+};
+
+module.exports = Subcategory;

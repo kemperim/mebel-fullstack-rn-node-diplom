@@ -1,6 +1,6 @@
 // models/Category.js
 const { DataTypes } = require('sequelize');
-const sequelize = require('../config/db');
+const sequelize = require('../config/db');  // Убедитесь, что правильный путь к подключению к базе данных
 
 const Category = sequelize.define(
   'Category',
@@ -16,16 +16,21 @@ const Category = sequelize.define(
     },
     description: {
       type: DataTypes.TEXT,
+      allowNull: true,
     },
     image: {
       type: DataTypes.STRING,
       allowNull: false,
     },
+    status: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true,
+    },
   },
   {
     tableName: 'categories',
-    timestamps: false, // Отключаем createdAt и updatedAt
+    timestamps: false,
   }
 );
 
-module.exports = Category;
+module.exports = Category;  // Это должно быть

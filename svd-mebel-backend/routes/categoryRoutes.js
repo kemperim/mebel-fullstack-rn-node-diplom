@@ -1,19 +1,17 @@
-const express = require("express");
-const Category = require("../models/Category");
-
+// routes/categoryRoutes.js
+const express = require('express');
 const router = express.Router();
+const Category = require('../models');  // Правильный путь к модели
 
-// Получить все категории
-router.get("/", async (req, res) => {
+// Получение всех категорий
+router.get('/categories', async (req, res) => {
   try {
-    const categories = await Category.findAll();
-    console.log("Категории на сервере:", categories); // Добавляем вывод данных
+    const categories = await Category.findAll();  // Здесь должно работать
     res.json(categories);
-  } catch (error) {
-    console.error("Ошибка при получении категорий:", error);
-    res.status(500).json({ message: "Ошибка сервера" });
+  } catch (err) {
+    console.error('Ошибка при получении категорий:', err);
+    res.status(500).send('Ошибка сервера');
   }
 });
-
 
 module.exports = router;
