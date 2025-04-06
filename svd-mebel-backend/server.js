@@ -13,6 +13,7 @@ const userRoutes = require('./routes/userRoutes');
 const categoryRoutes = require("./routes/categoryRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const subcategoryRoutes = require('./routes/subcategoryRoutes');
+const Subcategory = require('./models/Subcategory');
 sequelize.sync().then(() => console.log("✅ Таблица пользователей обновлена"));
 
 

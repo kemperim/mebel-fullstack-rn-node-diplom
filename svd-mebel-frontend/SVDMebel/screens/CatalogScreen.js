@@ -1,59 +1,52 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, ActivityIndicator, StyleSheet, TouchableOpacity, Image, Dimensions } from 'react-native';
 import axios from 'axios';
+import Icon from 'react-native-vector-icons/Feather';  // Импорт иконок
 
-const { width } = Dimensions.get('window'); // Получаем ширину экрана устройства
+const { width } = Dimensions.get('window');
 
 const CatalogScreen = () => {
-  const [categories, setCategories] = useState([]); // Храним категории
-  const [subcategories, setSubcategories] = useState([]); // Храним подкатегории
-  const [loading, setLoading] = useState(true); // Индикатор загрузки
-  const [loadingSubcategories, setLoadingSubcategories] = useState(false); // Индикатор загрузки подкатегорий
-  const [error, setError] = useState(''); 
-  const [selectedCategory, setSelectedCategory] = useState(null); // Храним выбранную категорию
+  const [categories, setCategories] = useState([]);
+  const [allSubcategories, setAllSubcategories] = useState([]);
+  const [filteredSubcategories, setFilteredSubcategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState(null);
 
   useEffect(() => {
-    // Загружаем категории при первом рендере
-    axios.get('http://192.168.8.100:5000/category') // Ваш API эндпоинт
-      .then(response => {
-        setCategories(response.data);
+    const fetchData = async () => {
+      try {
+        const [catRes, subcatRes] = await Promise.all([
+          axios.get('http://192.168.8.100:5000/category'),
+          axios.get('http://192.168.8.100:5000/subcategory'),
+        ]);
+
+        setCategories(catRes.data);
+        setAllSubcategories(subcatRes.data);
+      } catch (err) {
+        console.error('Ошибка загрузки:', err);
+        setError('Не удалось загрузить данные');
+      } finally {
         setLoading(false);
-      })
-      .catch(error => {
-        console.error('Ошибка загрузки категорий:', error);
-        setError('Не удалось загрузить категории');
-        setLoading(false);
-      });
+      }
+    };
+
+    fetchData();
   }, []);
 
-  const handleCategorySelect = (categoryId) => {
-    setSelectedCategory(categoryId);
-    setLoadingSubcategories(true); // Включаем индикатор загрузки подкатегорий
-
-    // Загружаем все подкатегории
-  // Получение всех категорий
-axios.get('http://192.168.8.100:5000/category')
-.then(response => {
-  const categories = response.data;
-  // Теперь можно запросить подкатегории для каждой категории
-  loadSubcategories(categories);
-})
-.catch(error => {
-  console.error('Ошибка загрузки категорий:', error.response || error);
-  setLoadingSubcategories(false);
-  setError('Не удалось загрузить категории');
-});
-
-  
+  const handleCategorySelect = (categoryId, categoryName) => {
+    setSelectedCategory({ id: categoryId, name: categoryName });
+    const filtered = allSubcategories.filter(sub => sub.category_id === categoryId);
+    setFilteredSubcategories(filtered);
   };
 
   const handleBackToCategories = () => {
     setSelectedCategory(null);
-    setSubcategories([]); // Очистка подкатегорий при возвращении
+    setFilteredSubcategories([]);
   };
 
   if (loading) {
-    return <ActivityIndicator size="large" color="#0000ff" style={styles.loader} />;
+    return <ActivityIndicator size="large" color="#FF7043" style={styles.loader} />;
   }
 
   return (
@@ -61,15 +54,14 @@ axios.get('http://192.168.8.100:5000/category')
       {error && <Text style={styles.error}>{error}</Text>}
 
       {!selectedCategory ? (
-        // Если категория не выбрана, показываем список категорий
         <FlatList
           data={categories}
-          numColumns={2} // Разделяем на 2 колонки
+          numColumns={2}
           keyExtractor={item => item.id.toString()}
           renderItem={({ item }) => (
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.categoryItem}
-              onPress={() => handleCategorySelect(item.id)} // Выбор категории
+              onPress={() => handleCategorySelect(item.id, item.name)}
             >
               <Image source={{ uri: item.image }} style={styles.categoryImage} />
               <View style={styles.categoryInfo}>
@@ -80,22 +72,26 @@ axios.get('http://192.168.8.100:5000/category')
           )}
         />
       ) : (
-        // Если категория выбрана, показываем подкатегории
         <View style={styles.subcategoryContainer}>
           <TouchableOpacity onPress={handleBackToCategories} style={styles.backButton}>
-            <Text style={styles.backButtonText}>Назад к категориям</Text>
+            <Text style={styles.backButtonText}>Вернуться к категориям</Text>
           </TouchableOpacity>
-          <Text style={styles.header}>Подкатегории:</Text>
-          {loadingSubcategories ? (
-            <ActivityIndicator size="large" color="#0000ff" />
+
+          {/* Название категории */}
+          <Text style={styles.categoryTitle}>{selectedCategory.name}</Text>
+
+          {filteredSubcategories.length === 0 ? (
+            <Text style={styles.noSub}>Нет подкатегорий</Text>
           ) : (
             <FlatList
-              data={subcategories}
+              data={filteredSubcategories}
               keyExtractor={item => item.id.toString()}
               renderItem={({ item }) => (
                 <View style={styles.subcategoryItem}>
-                  <Text style={styles.subcategoryName}>{item.name}</Text>
-                  <Text style={styles.subcategoryDescription}>{item.description}</Text>
+                  <Image source={{ uri: item.image }} style={styles.subcategoryImage} />
+                  <View style={styles.subcategoryText}>
+                    <Text style={styles.subcategoryName}>{item.name}</Text>
+                  </View>
                 </View>
               )}
             />
@@ -107,25 +103,25 @@ axios.get('http://192.168.8.100:5000/category')
 };
 
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
-    padding: 16, 
-    backgroundColor: '#f5f5f5', 
+  container: {
+    flex: 1,
+    padding: 16,
+    backgroundColor: '#FFFFFF',
   },
   categoryItem: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#FFFFFF',
     borderRadius: 8,
     marginBottom: 16,
-    marginRight: 10, // Отступ между колонками
+    marginRight: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 5,
     overflow: 'hidden',
-    height: 250, // Устанавливаем одинаковую высоту для всех элементов
-    maxWidth: (width / 2) - 20, // Задаем максимальную ширину для элемента, чтобы они не выходили за пределы экрана
+    height: 250,
+    maxWidth: (width / 2) - 20,
   },
   categoryImage: {
     width: '100%',
@@ -150,38 +146,82 @@ const styles = StyleSheet.create({
   subcategoryContainer: {
     marginTop: 20,
   },
+  categoryTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 20,
+  },
   header: {
     fontSize: 22,
     fontWeight: 'bold',
     marginBottom: 10,
   },
   subcategoryItem: {
-    padding: 12,
-    backgroundColor: '#e0e0e0',
-    marginBottom: 8,
-    borderRadius: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF', // белый фон
+    marginBottom: 16,
+    borderRadius: 12,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3, // тень на Android
+    height: 80,
   },
+
+  subcategoryImage: {
+    width: 50,
+    height: 50,
+    borderTopLeftRadius: 12,
+    borderBottomLeftRadius: 12,
+    marginStart: 12,
+  },
+
+  subcategoryText: {
+    padding: 12,
+    flex: 1,
+    justifyContent: 'center',
+  },
+
   subcategoryName: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: '700',
+    color: '#333',
   },
-  subcategoryDescription: {
-    fontSize: 14,
-    color: '#777',
+
+  loader: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  loader: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  error: { color: 'red', textAlign: 'center', marginTop: 10 },
+  error: {
+    color: 'red',
+    textAlign: 'center',
+    marginTop: 10,
+  },
   backButton: {
+    flexDirection: 'row', // для выравнивания стрелки и текста
+    alignItems: 'center',
     marginBottom: 16,
     padding: 10,
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#FF7043', // оранжевый цвет
     borderRadius: 8,
-    alignItems: 'center',
+    justifyContent: 'center',
   },
   backButtonText: {
     color: '#fff',
     fontSize: 16,
-  }
+    marginLeft: 8, // расстояние между стрелкой и текстом
+  },
+  noSub: {
+    textAlign: 'center',
+    color: '#666',
+    marginTop: 10,
+    fontSize: 16,
+  },
 });
 
 export default CatalogScreen;

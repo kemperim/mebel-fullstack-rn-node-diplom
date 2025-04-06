@@ -3,9 +3,7 @@
 const { Sequelize, DataTypes } = require('sequelize');
 const sequelize = require('../config/db'); // Подключение к базе данных
 
-// Определение модели Subcategory
 const Subcategory = sequelize.define('Subcategory', {
-  // Указываем поля таблицы
   id: {
     type: DataTypes.INTEGER,
     primaryKey: true,
@@ -19,10 +17,13 @@ const Subcategory = sequelize.define('Subcategory', {
     type: DataTypes.STRING,
     allowNull: false,
   },
+  image: {
+    type: DataTypes.STRING,
+    allowNull: true, // если картинка не обязательна
+  },
 }, {
-  // Указываем имя таблицы вручную (если она называется subcategories)
   tableName: 'subcategories',
-  timestamps: false, // Если в таблице нет полей createdAt, updatedAt
+  timestamps: false,
 });
 
 module.exports = { Subcategory };
