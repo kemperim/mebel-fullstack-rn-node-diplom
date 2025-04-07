@@ -1,6 +1,5 @@
-// models/Category.js
 const { DataTypes } = require('sequelize');
-const sequelize = require('../config/db');  // Убедитесь, что правильный путь к подключению к базе данных
+const sequelize = require('../config/db');
 
 const Category = sequelize.define(
   'Category',
@@ -22,10 +21,7 @@ const Category = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
     },
-    status: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: true,
-    },
+    
   },
   {
     tableName: 'categories',
@@ -33,4 +29,5 @@ const Category = sequelize.define(
   }
 );
 
-module.exports = Category;  // Это должно быть
+
+module.exports = Category;

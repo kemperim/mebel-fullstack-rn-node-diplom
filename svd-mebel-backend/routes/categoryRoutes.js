@@ -1,16 +1,23 @@
-// routes/categoryRoutes.js
 const express = require('express');
+const { Category } = require('../models');
 const router = express.Router();
-const Category = require('../models');  // Правильный путь к модели
 
 // Получение всех категорий
-router.get('/categories', async (req, res) => {
+router.get('/', async (req, res) => {
   try {
-    const categories = await Category.findAll();  // Здесь должно работать
+    // Запрос всех категорий
+    const categories = await Category.findAll();
+
+    // Если категории не найдены
+    if (categories.length === 0) {
+      return res.status(404).json({ message: 'Категории не найдены' });
+    }
+
+    // Возвращаем все категории
     res.json(categories);
-  } catch (err) {
-    console.error('Ошибка при получении категорий:', err);
-    res.status(500).send('Ошибка сервера');
+  } catch (error) {
+    console.error('Ошибка получения категорий:', error);
+    res.status(500).json({ message: 'Ошибка на сервере' });
   }
 });
 

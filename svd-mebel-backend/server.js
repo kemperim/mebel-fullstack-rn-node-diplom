@@ -2,6 +2,7 @@ require('dotenv').config();
 process.env.JWT_SECRET = 'your_secret_key'; // Принудительное указание ключа
 
 console.log("🔑 Загруженный JWT_SECRET:", process.env.JWT_SECRET);
+const models = require('./models'); // Импорт всех моделей + ассоциаций
 const sequelize = require("./config/db"); // Добавь этот импорт
 const express = require('express');
 const cors = require('cors');
