@@ -15,6 +15,7 @@ const categoryRoutes = require("./routes/categoryRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const subcategoryRoutes = require('./routes/subcategoryRoutes');
 const Subcategory = require('./models/Subcategory');
+const cartRoutes = require('./routes/cartRoutes');
 sequelize.sync().then(() => console.log("✅ Таблица пользователей обновлена"));
 
 
@@ -29,7 +30,7 @@ app.use('/category', categoryRoutes);
 app.use('/subcategory', subcategoryRoutes);
 app.use('/products', productRoutes); 
 app.use('/user', userRoutes);
-
+app.use('/cart', cartRoutes);
 
 
 

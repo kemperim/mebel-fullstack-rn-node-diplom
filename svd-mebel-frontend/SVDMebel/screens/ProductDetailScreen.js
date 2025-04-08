@@ -1,23 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, ScrollView, StyleSheet, TouchableOpacity, FlatList, Dimensions } from 'react-native';
+import { View, Text, Image, ScrollView, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import axios from 'axios';
 import { Ionicons } from '@expo/vector-icons';
-
-const { width } = Dimensions.get('window');
 
 const ProductDetailScreen = ({ route }) => {
   const { productId } = route.params;
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  
+  const [isAdded, setIsAdded] = useState(false); // Состояние для отслеживания, был ли добавлен товар в корзину
+  const [userId, setUserId] = useState(1); // Предполагаем, что ID пользователя доступен
+  const [cart, setCart] = useState([]); // Для хранения данных корзины
 
   useEffect(() => {
     const fetchProductDetails = async () => {
       try {
         const res = await axios.get(`http://192.168.8.100:5000/products/product/${productId}`);
         setProduct(res.data);
-     
       } catch (err) {
         console.error('Ошибка загрузки данных товара:', err);
         setError('Не удалось загрузить данные товара');
@@ -26,11 +25,44 @@ const ProductDetailScreen = ({ route }) => {
       }
     };
 
+    const checkProductInCart = async () => {
+      try {
+        const res = await axios.get(`http://192.168.8.100:5000/cart/${userId}`);
+        const productInCart = res.data.find(item => item.product_id === productId); // Проверяем, есть ли товар в корзине
+        if (productInCart) {
+          setIsAdded(true); // Если товар есть, ставим флаг, что он добавлен
+        }
+        setCart(res.data); // Сохраняем данные корзины
+      } catch (err) {
+        console.error('Ошибка загрузки корзины:', err);
+      }
+    };
+
     fetchProductDetails();
-  }, [productId]);
+    checkProductInCart(); // Проверяем корзину
+
+  }, [productId, userId]);
+
+  const handleAddToCart = async () => {
+    if (product && !isAdded) {
+      try {
+        const res = await axios.post('http://192.168.8.100:5000/cart/add', {
+          productId: product.id,
+          userId: userId,
+        });
+        if (res.status === 201) {
+          setIsAdded(true); // Обновляем состояние, чтобы показать, что товар добавлен
+          setCart([...cart, product]); // Добавляем товар в корзину
+        }
+      } catch (error) {
+        console.error('Ошибка при добавлении товара в корзину:', error.response.data);
+        setError('Не удалось добавить товар в корзину');
+      }
+    }
+  };
 
   if (loading) {
-    return <Text>Загрузка...</Text>;
+    return <ActivityIndicator size="large" color="#FF7043" style={{ marginTop: 100 }} />;
   }
 
   if (error) {
@@ -38,74 +70,87 @@ const ProductDetailScreen = ({ route }) => {
   }
 
   return (
-    <ScrollView style={styles.container}>
-      {product && (
-        <View style={styles.productDetail}>
-          {/* Изображения товара */}
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.imagesContainer}>
-            {product.image && (
-              <Image source={{ uri: product.image }} style={styles.productImage} />
-            )}
-          </ScrollView>
-
-          {/* Название товара */}
-          <Text style={styles.productName}>{product.name}</Text>
-
-          {/* Цена товара */}
-          <Text style={styles.productPrice}>{product.price} руб.</Text>
-
-          {/* Рейтинг товара */}
-          <View style={styles.rating}>
-            <Ionicons name="star" size={14} color="#FFD700" />
-            <Text style={styles.productRating}>{product.rating}</Text>
-          </View>
-
-          {/* Описание товара */}
-          <Text style={styles.productDescription}>{product.description}</Text>
-
-          {/* Характеристики товара */}
-          {product.attributes && product.attributes.length > 0 && (
-            <View style={styles.productAttributes}>
-              <Text style={styles.attributesTitle}>Характеристики</Text>
-              {product.attributes.map((attr, index) => (
-                <Text key={index} style={styles.attributeItem}>
-                  {attr.name}: {attr.value}
-                </Text>
-              ))}
-            </View>
-          )}
-
-          {/* Кнопка добавления в корзину */}
-          <TouchableOpacity style={styles.addToCartButton}>
-            <Text style={styles.addToCartText}>Добавить в корзину</Text>
-          </TouchableOpacity>
-
-          {/* Отзывы */}
-          <Text style={styles.reviewsTitle}>Отзывы</Text>
-          {product.reviews && product.reviews.length > 0 ? (
-            <FlatList
-              data={product.reviews}
-              keyExtractor={item => item.id.toString()}
-              renderItem={({ item }) => (
-                <View style={styles.reviewItem}>
-                  <Text style={styles.reviewAuthor}>{item.author}</Text>
-                  <Text style={styles.reviewText}>{item.text}</Text>
-                </View>
+    <View style={styles.wrapper}>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        {product && (
+          <View style={styles.productDetail}>
+            {/* Изображения товара */}
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.imagesContainer}>
+              {product.image && (
+                <Image source={{ uri: product.image }} style={styles.productImage} />
               )}
-            />
-          ) : (
-            <Text style={styles.noReviews}>Отзывов нет</Text>
-          )}
-        </View>
-      )}
-    </ScrollView>
+            </ScrollView>
+
+            {/* Название товара */}
+            <Text style={styles.productName}>{product.name}</Text>
+
+            {/* Цена товара */}
+            <Text style={styles.productPrice}>{product.price} руб.</Text>
+
+            {/* Рейтинг */}
+            <View style={styles.rating}>
+              <Ionicons name="star" size={14} color="#FFD700" />
+              <Text style={styles.productRating}>{product.rating}</Text>
+            </View>
+
+            {/* Описание */}
+            <Text style={styles.productDescription}>{product.description}</Text>
+
+            {/* Характеристики */}
+            {product.attributes && product.attributes.length > 0 && (
+              <View style={styles.productAttributes}>
+                <Text style={styles.attributesTitle}>Характеристики</Text>
+                {product.attributes.map((attr, index) => (
+                  <Text key={index} style={styles.attributeItem}>
+                    {attr.name}: {attr.value}
+                  </Text>
+                ))}
+              </View>
+            )}
+
+            {/* Отзывы */}
+            <Text style={styles.reviewsTitle}>Отзывы</Text>
+            {product.reviews && product.reviews.length > 0 ? (
+              <FlatList
+                data={product.reviews}
+                keyExtractor={item => item.id.toString()}
+                renderItem={({ item }) => (
+                  <View style={styles.reviewItem}>
+                    <Text style={styles.reviewAuthor}>{item.author}</Text>
+                    <Text style={styles.reviewText}>{item.text}</Text>
+                  </View>
+                )}
+              />
+            ) : (
+              <Text style={styles.noReviews}>Отзывов нет</Text>
+            )}
+          </View>
+        )}
+      </ScrollView>
+
+      {/* Фиксированная кнопка */}
+      <View style={styles.bottomBar}>
+        <TouchableOpacity 
+          style={[styles.addToCartButton, isAdded && { backgroundColor: '#ddd' }]} 
+          onPress={handleAddToCart} 
+          disabled={isAdded} // Отключаем кнопку, если товар уже добавлен
+        >
+          <Text style={styles.addToCartText}>
+            {isAdded ? 'Товар добавлен в корзину' : 'Добавить в корзину'}
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  wrapper: {
     flex: 1,
     backgroundColor: '#f9f9f9',
+  },
+  scrollContent: {
+    paddingBottom: 100, // место для кнопки
   },
   productDetail: {
     padding: 16,
@@ -115,7 +160,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   productImage: {
-    width: width - 32,  // Устанавливаем ширину изображения по размеру экрана
+    width: '100%',
     height: 300,
     borderRadius: 10,
     marginRight: 10,
@@ -162,19 +207,6 @@ const styles = StyleSheet.create({
     color: '#333',
     marginBottom: 4,
   },
-  addToCartButton: {
-    backgroundColor: '#FF7043',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 5,
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  addToCartText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
   reviewsTitle: {
     fontSize: 20,
     fontWeight: '700',
@@ -207,6 +239,28 @@ const styles = StyleSheet.create({
     color: 'red',
     textAlign: 'center',
     marginTop: 20,
+  },
+  bottomBar: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: '#fff',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderTopWidth: 1,
+    borderColor: '#ddd',
+  },
+  addToCartButton: {
+    backgroundColor: '#FF7043',
+    paddingVertical: 14,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  addToCartText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
 

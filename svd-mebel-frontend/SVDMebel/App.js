@@ -24,6 +24,16 @@ import axios from 'axios';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
+const CatalogStack = createNativeStackNavigator();
+
+const CatalogStackScreen = () => (
+  <CatalogStack.Navigator>
+    <CatalogStack.Screen name="CatalogScreen" component={CatalogScreen} options={{ title: 'Каталог' }} />
+    <CatalogStack.Screen name="Subcategory" component={SubcategoryScreen} options={({ route }) => ({ title: route.params?.categoryName || 'Подкатегория' })} />
+    <CatalogStack.Screen name="Product" component={ProductScreen} options={({ route }) => ({ title: route.params?.subcategoryName || 'Продукты' })} />
+
+  </CatalogStack.Navigator>
+);
 
 // Устанавливаем токен авторизации для Axios
 const setAuthToken = async () => {
@@ -46,12 +56,14 @@ const MainTabs = () => (
     }}
   >
     <Tab.Screen
-      name="Каталог"
-      component={CatalogScreen}
-      options={{
-        tabBarIcon: ({ color }) => <Ionicons name="list" size={24} color={color} />,
-      }}
-    />
+  name="Каталог"
+  component={CatalogStackScreen}
+  options={{
+    tabBarIcon: ({ color }) => <Ionicons name="list" size={24} color={color} />,
+    headerShown: false, // скрыть хедер на уровне табов
+  }}
+/>
+
     <Tab.Screen
       name="Корзина"
       component={CartScreen}
@@ -103,7 +115,7 @@ const App = () => {
           component={SubcategoryScreen}
            options={({ route }) => ({
            headerShown: true,
-          title: route.params?.categoryName || 'Подкатегория', // Заголовок с параметром
+          title: route.params?.categoryName || 'Подкатегория',
            })}
 />
 
@@ -113,7 +125,7 @@ const App = () => {
           component={ProductScreen}
           options={({ route }) => ({
             headerShown: true,
-           title: route.params?.subcategoryName || 'Подкатегория', // Заголовок с параметром
+           title: route.params?.subcategoryName || 'Подкатегория', 
             })}
         />
        
