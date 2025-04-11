@@ -50,7 +50,7 @@ setAuthToken();
 const MainTabs = () => (
   <Tab.Navigator
     screenOptions={{
-      tabBarActiveTintColor: "#FF6600", // Оранжевый цвет активных вкладок
+      tabBarActiveTintColor: "#1FA915", // Оранжевый цвет активных вкладок
       tabBarInactiveTintColor: "#777",  // Серый цвет неактивных вкладок
       tabBarStyle: { backgroundColor: "#fff" }, // Фон таб-бара белый
     }}

@@ -15,8 +15,10 @@ const Login = ({ navigation }) => {
             password,
         });
 
-        await AsyncStorage.setItem("token", response.data.token); // Сохраняем токен
-      
+        const { token, user } = response.data;
+        await AsyncStorage.setItem("token", token); // Сохраняем токен
+        await AsyncStorage.setItem("userId", user.id.toString()); 
+
         navigation.reset({
           index: 0,
           routes: [{ name: "Main" }], // Переход на главный экран

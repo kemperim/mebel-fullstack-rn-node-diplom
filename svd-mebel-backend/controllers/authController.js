@@ -1,5 +1,5 @@
 const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
+const jwt = require('jsonwebtoken');
 const User = require("../models/User");
 
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -62,7 +62,7 @@ const login = async (req, res) => {
             return res.status(400).json({ message: "Неверный пароль" });
         }
 
-        console.log("🔑 Генерация токена с секретом:", JWT_SECRET);
+        // Генерация токена
         const token = jwt.sign({ userId: user.id, role: user.role }, JWT_SECRET, { expiresIn: "1h" });
 
         res.status(200).json({ 

@@ -39,14 +39,14 @@ const ProfileScreen = ({ navigation }) => {
 
   const handleLogout = async () => {
     await AsyncStorage.removeItem("token");
-    setUser(null);
+    setUser(null);  // Очистить данные пользователя
     navigation.navigate("Login");
   };
-
+  
   if (loading) {
     return (
       <View style={styles.container}>
-        <ActivityIndicator size="large" color="#007AFF" />
+        <ActivityIndicator size="large" color="#4CAF50" />
       </View>
     );
   }
@@ -60,11 +60,11 @@ const ProfileScreen = ({ navigation }) => {
         <View style={styles.iconContainer}>
           {user?.role === "admin" && (
             <TouchableOpacity onPress={() => navigation.navigate("AdminPanel")}>
-              <Ionicons name="key-outline" size={24} color="#FF6600" style={styles.adminIcon} />
+              <Ionicons name="key-outline" size={24} color="#43A047" style={styles.adminIcon} />
             </TouchableOpacity>
           )}
           <TouchableOpacity onPress={() => navigation.navigate("Settings")}>
-            <Ionicons name="settings-outline" size={24} color="black" />
+            <Ionicons name="settings-outline" size={24} color="#388E3C" />
           </TouchableOpacity>
         </View>
       </View>
@@ -137,8 +137,9 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   userName: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: "bold",
+    color: "#388E3C",
   },
   iconContainer: {
     flexDirection: "row",
@@ -151,11 +152,16 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: "#FF6600",
+    backgroundColor: "#66BB6A",
     justifyContent: "center",
     alignItems: "center",
     alignSelf: "center",
     marginBottom: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
   },
   avatar: {
     width: 80,
@@ -163,7 +169,7 @@ const styles = StyleSheet.create({
     resizeMode: "contain",
   },
   email: {
-    fontSize: 14,
+    fontSize: 16,
     color: "#666",
     textAlign: "center",
     marginBottom: 15,
@@ -172,36 +178,60 @@ const styles = StyleSheet.create({
     padding: 15,
     borderBottomWidth: 1,
     borderBottomColor: "#ddd",
+    backgroundColor: "#F1F8E9",
+    borderRadius: 8,
+    marginBottom: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
   itemText: {
     fontSize: 16,
+    color: "#388E3C",
   },
   logoutButton: {
     marginTop: 20,
     paddingVertical: 10,
     paddingHorizontal: 40,
-    backgroundColor: "#FF4444",
-    borderRadius: 10,
+    backgroundColor: "#66BB6A",
+    borderRadius: 12,
     alignSelf: "center",
     marginBottom: 30,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 6,
   },
   logoutText: {
     fontSize: 16,
     fontWeight: "600",
     color: "#FFF",
-    
   },
   registerButton: {
-    backgroundColor: "#FF6600",
-    borderRadius: 10,
+    backgroundColor: "#66BB6A",
+    borderRadius: 12,
     width: "80%",
     paddingVertical: 8,
     alignSelf: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 6,
   },
   buttonText: {
     fontSize: 16,
     fontWeight: "600",
     color: "#FFF",
+  },
+  greeting: {
+    fontSize: 16,
+    color: "#66BB6A",
+    textAlign: "center",
+    marginBottom: 15,
   },
 });
 

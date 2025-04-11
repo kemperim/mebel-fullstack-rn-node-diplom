@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, ScrollView, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, Image, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 
 const ProductDetailScreen = ({ route }) => {
@@ -8,96 +9,118 @@ const ProductDetailScreen = ({ route }) => {
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [isAdded, setIsAdded] = useState(false); // Состояние для отслеживания, был ли добавлен товар в корзину
-  const [userId, setUserId] = useState(1); // Предполагаем, что ID пользователя доступен
-  const [cart, setCart] = useState([]); // Для хранения данных корзины
+  const [isAdded, setIsAdded] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
     const fetchProductDetails = async () => {
       try {
-        const res = await axios.get(`http://192.168.8.100:5000/products/product/${productId}`);
+        const token = await AsyncStorage.getItem('token');
+        const userId = await AsyncStorage.getItem('userId');
+  
+        // Проверка авторизации
+        if (token && userId) {
+          setIsAuthenticated(true);
+        } else {
+          setIsAuthenticated(false);
+        }
+  
+        const res = await axios.get(`http://192.168.8.100:5000/products/product/${productId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         setProduct(res.data);
+        console.log('Данные товара:', res.data);
       } catch (err) {
         console.error('Ошибка загрузки данных товара:', err);
         setError('Не удалось загрузить данные товара');
-      } finally {
-        setLoading(false);
       }
     };
-
+  
     const checkProductInCart = async () => {
       try {
-        const res = await axios.get(`http://192.168.8.100:5000/cart/${userId}`);
-        const productInCart = res.data.find(item => item.product_id === productId); // Проверяем, есть ли товар в корзине
-        if (productInCart) {
-          setIsAdded(true); // Если товар есть, ставим флаг, что он добавлен
+        const token = await AsyncStorage.getItem('token');
+        const userId = await AsyncStorage.getItem('userId');
+  
+        if (!userId) {
+          console.error('User ID is missing');
+          return;
         }
-        setCart(res.data); // Сохраняем данные корзины
+  
+        // Получаем данные о корзине
+        const cartRes = await axios.get(`http://192.168.8.100:5000/cart/${userId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+  
+        console.log('Корзина:', cartRes.data);
+        const isProductInCart = cartRes.data.some(item => item.productId === productId);
+        setIsAdded(isProductInCart);
       } catch (err) {
-        console.error('Ошибка загрузки корзины:', err);
+        console.error('Ошибка при проверке корзины:', err);
+        setError('Не удалось проверить корзину');
       }
     };
-
+  
     fetchProductDetails();
-    checkProductInCart(); // Проверяем корзину
-
-  }, [productId, userId]);
-
+    checkProductInCart();
+  }, [productId]);
+  
+  // Обработчик для добавления товара в корзину
   const handleAddToCart = async () => {
-    if (product && !isAdded) {
-      try {
-        const res = await axios.post('http://192.168.8.100:5000/cart/add', {
-          productId: product.id,
-          userId: userId,
-        });
-        if (res.status === 201) {
-          setIsAdded(true); // Обновляем состояние, чтобы показать, что товар добавлен
-          setCart([...cart, product]); // Добавляем товар в корзину
+    if (!isAuthenticated) {
+      alert('Для добавления в корзину необходимо авторизоваться');
+      return;
+    }
+  
+    if (isAdded) {
+      alert('Товар уже в корзине');
+      return;
+    }
+  
+    try {
+      const token = await AsyncStorage.getItem('token');
+      const response = await axios.post(
+        `http://192.168.8.100:5000/cart/add`,
+        { productId, quantity: 1 },
+        {
+          headers: { Authorization: `Bearer ${token}` },
         }
-      } catch (error) {
-        console.error('Ошибка при добавлении товара в корзину:', error.response.data);
-        setError('Не удалось добавить товар в корзину');
+      );
+  
+      console.log('Ответ от сервера:', response);
+  
+      if (response.data?.message === 'Товар успешно добавлен в корзину') {
+        setIsAdded(true);
+        alert('Товар успешно добавлен в корзину');
+      } else {
+        alert('Не удалось добавить товар в корзину. Пожалуйста, попробуйте позже.');
       }
+    } catch (error) {
+      console.error('Ошибка при добавлении товара в корзину', error?.response || error.message);
+      alert('Не удалось добавить товар в корзину. Пожалуйста, попробуйте позже.');
     }
   };
-
-  if (loading) {
-    return <ActivityIndicator size="large" color="#FF7043" style={{ marginTop: 100 }} />;
-  }
-
-  if (error) {
-    return <Text style={styles.error}>{error}</Text>;
-  }
-
+  
+  // Кнопка добавления в корзину
   return (
     <View style={styles.wrapper}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {product && (
           <View style={styles.productDetail}>
-            {/* Изображения товара */}
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.imagesContainer}>
-              {product.image && (
-                <Image source={{ uri: product.image }} style={styles.productImage} />
-              )}
+              {product.image && <Image source={{ uri: product.image }} style={styles.productImage} />}
             </ScrollView>
-
-            {/* Название товара */}
+  
             <Text style={styles.productName}>{product.name}</Text>
-
-            {/* Цена товара */}
-            <Text style={styles.productPrice}>{product.price} руб.</Text>
-
-            {/* Рейтинг */}
+            <Text style={styles.productPrice}>{product.price} ₽</Text>
+  
             <View style={styles.rating}>
-              <Ionicons name="star" size={14} color="#FFD700" />
+              <Ionicons name="star" size={16} color="#FFD700" />
               <Text style={styles.productRating}>{product.rating}</Text>
             </View>
-
-            {/* Описание */}
+  
             <Text style={styles.productDescription}>{product.description}</Text>
-
-            {/* Характеристики */}
-            {product.attributes && product.attributes.length > 0 && (
+  
+            {product.attributes?.length > 0 && (
               <View style={styles.productAttributes}>
                 <Text style={styles.attributesTitle}>Характеристики</Text>
                 {product.attributes.map((attr, index) => (
@@ -107,133 +130,98 @@ const ProductDetailScreen = ({ route }) => {
                 ))}
               </View>
             )}
-
-            {/* Отзывы */}
-            <Text style={styles.reviewsTitle}>Отзывы</Text>
-            {product.reviews && product.reviews.length > 0 ? (
-              <FlatList
-                data={product.reviews}
-                keyExtractor={item => item.id.toString()}
-                renderItem={({ item }) => (
-                  <View style={styles.reviewItem}>
-                    <Text style={styles.reviewAuthor}>{item.author}</Text>
-                    <Text style={styles.reviewText}>{item.text}</Text>
-                  </View>
-                )}
-              />
-            ) : (
-              <Text style={styles.noReviews}>Отзывов нет</Text>
-            )}
           </View>
         )}
       </ScrollView>
-
-      {/* Фиксированная кнопка */}
+  
       <View style={styles.bottomBar}>
-        <TouchableOpacity 
-          style={[styles.addToCartButton, isAdded && { backgroundColor: '#ddd' }]} 
-          onPress={handleAddToCart} 
-          disabled={isAdded} // Отключаем кнопку, если товар уже добавлен
+        <TouchableOpacity
+          style={[styles.addToCartButton, isAdded && styles.addedButton]}
+          onPress={handleAddToCart}
+          disabled={isAdded || !isAuthenticated} // Проверка авторизации и добавления в корзину
         >
-          <Text style={styles.addToCartText}>
-            {isAdded ? 'Товар добавлен в корзину' : 'Добавить в корзину'}
+          <Text style={[styles.addToCartText, isAdded && styles.addedText]}>
+            {isAdded
+              ? 'Товар в корзине'
+              : isAuthenticated
+              ? 'Добавить в корзину'
+              : 'Авторизуйтесь, чтобы добавить в корзину'}
           </Text>
         </TouchableOpacity>
       </View>
     </View>
   );
-};
+}  
 
 const styles = StyleSheet.create({
   wrapper: {
     flex: 1,
-    backgroundColor: '#f9f9f9',
+    backgroundColor: '#f4fdf7',
   },
   scrollContent: {
-    paddingBottom: 100, // место для кнопки
+    paddingBottom: 100,
   },
   productDetail: {
-    padding: 16,
-    backgroundColor: '#fff',
+    padding: 20,
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    margin: 16,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 4,
   },
   imagesContainer: {
     marginBottom: 16,
   },
   productImage: {
-    width: '100%',
-    height: 300,
-    borderRadius: 10,
+    width: 320,
+    height: 240,
+    borderRadius: 12,
     marginRight: 10,
+    resizeMode: 'cover',
   },
   productName: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#333',
-    marginTop: 16,
+    color: 'black',
+    marginBottom: 6,
   },
   productPrice: {
-    fontSize: 20,
-    color: '#FF7043',
+    fontSize: 22,
+    color: '#388e3c',
     fontWeight: '600',
-    marginTop: 8,
+    marginBottom: 10,
   },
   rating: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 8,
+    marginBottom: 12,
   },
   productRating: {
     fontSize: 16,
-    color: '#FFD700',
-    marginLeft: 5,
+    marginLeft: 6,
+    color: '#4CAF50',
   },
   productDescription: {
     fontSize: 16,
-    color: '#333',
-    marginTop: 16,
+    color: '#444',
     lineHeight: 22,
+    marginBottom: 16,
   },
   productAttributes: {
-    marginTop: 16,
+    marginBottom: 20,
   },
   attributesTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333',
+    color: '#2e7d32',
     marginBottom: 8,
   },
   attributeItem: {
-    fontSize: 16,
-    color: '#333',
-    marginBottom: 4,
-  },
-  reviewsTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#333',
-    marginTop: 24,
-  },
-  reviewItem: {
-    backgroundColor: '#f1f1f1',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 12,
-  },
-  reviewAuthor: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-  },
-  reviewText: {
-    fontSize: 14,
+    fontSize: 15,
     color: '#555',
-    marginTop: 8,
-  },
-  noReviews: {
-    fontSize: 16,
-    color: '#888',
-    marginTop: 8,
-    textAlign: 'center',
+    marginBottom: 4,
   },
   error: {
     color: 'red',
@@ -246,21 +234,27 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     backgroundColor: '#fff',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
     borderTopWidth: 1,
     borderColor: '#ddd',
   },
   addToCartButton: {
-    backgroundColor: '#FF7043',
-    paddingVertical: 14,
-    borderRadius: 8,
+    backgroundColor: '#4CAF50',
+    paddingVertical: 16,
+    borderRadius: 10,
     alignItems: 'center',
+  },
+  addedButton: {
+    backgroundColor: '#c8e6c9',
   },
   addToCartText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+  },
+  addedText: {
+    color: '#388e3c',
   },
 });
 
