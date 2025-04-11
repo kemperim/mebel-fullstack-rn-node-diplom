@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { 
-  View, Text, Image, StyleSheet, TouchableOpacity, ActivityIndicator, Animated 
+  View, Text, Image, StyleSheet, TouchableOpacity, ActivityIndicator, Animated, ScrollView 
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
@@ -52,10 +52,10 @@ const ProfileScreen = ({ navigation }) => {
   }
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
       {/* Верхняя строка */}
       <View style={styles.header}>
-        <Text style={styles.userName}>{user ? user.name : "Гость"}</Text>
+        <Text style={styles.userName}>{user ?  "Приветствуем " + user.name+"!"  : "Гость"}</Text>
         
         <View style={styles.iconContainer}>
           {user?.role === "admin" && (
@@ -69,15 +69,15 @@ const ProfileScreen = ({ navigation }) => {
         </View>
       </View>
 
-      {/* Аватар */}
-      <Animated.View style={[styles.avatarCircle, { transform: [{ scale: scaleAnim }] }]}>
-        <Image source={require("../assets/logo.png")} style={styles.avatar} />
-      </Animated.View>
-
+  {/* Аватар показывается только если пользователь не авторизован */}
+  {!user && (
+    <Animated.View style={[styles.avatarCircle, { transform: [{ scale: scaleAnim }] }]}>
+      <Image source={require("../assets/logo.png")} style={styles.avatar} />
+    </Animated.View>
+  )}
       {user ? (
         <>
-          <Text style={styles.email}>{user.email}</Text>
-
+   
           {/* Разделы профиля */}
           <TouchableOpacity style={styles.item} onPress={() => navigation.navigate("Orders")}>
             <Text style={styles.itemText}>📦 Мои заказы</Text>
@@ -119,7 +119,7 @@ const ProfileScreen = ({ navigation }) => {
           </Button>
         </>
       )}
-    </View>
+    </ScrollView>
   );
 };
 
@@ -195,7 +195,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
     paddingVertical: 10,
     paddingHorizontal: 40,
-    backgroundColor: "#66BB6A",
+    backgroundColor: "red",
     borderRadius: 12,
     alignSelf: "center",
     marginBottom: 30,

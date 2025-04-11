@@ -67,22 +67,24 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     padding: 25,
-    backgroundColor: "#FFF",
+    backgroundColor: "#EAF7EA", // светлый зелёный фон
   },
   header: {
     fontSize: 28,
     fontWeight: "bold",
-    color: "#333",
+    color: "#1FA915", // насыщенный зелёный
     textAlign: "center",
     marginBottom: 30,
   },
   input: {
-    backgroundColor: "#F5F5F5",
+    backgroundColor: "#F0FFF0", // очень светлый зелёный
     padding: 15,
     borderRadius: 10,
     fontSize: 16,
     marginBottom: 15,
     color: "#333",
+    borderWidth: 1,
+    borderColor: "#C8E6C9", // светло-зелёная граница
   },
   error: {
     color: "red",
@@ -91,7 +93,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   button: {
-    backgroundColor: "#FF6600",
+    backgroundColor: "#1FA915", // основной зелёный
     paddingVertical: 15,
     borderRadius: 10,
     alignItems: "center",
@@ -109,12 +111,13 @@ const styles = StyleSheet.create({
   },
   bottomText: {
     fontSize: 14,
-    color: "#666",
+    color: "#555",
   },
   loginLink: {
-    color: "#FF6600",
+    color: "#1FA915", // зелёная ссылка
     fontWeight: "bold",
   },
 });
+
 
 export default Register;
