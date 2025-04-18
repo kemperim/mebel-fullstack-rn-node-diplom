@@ -19,6 +19,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import ProductDetailScreen from "./screens/ProductDetailScreen";
+import AddProductScreen from "./components/AddProduct";
 
 import axios from 'axios';
 
@@ -108,6 +109,7 @@ const App = () => {
         <Stack.Screen name="AdminProducts" component={AdminProductsScreen} options={{headerShown:true, title:'Все товары'}}  />
         <Stack.Screen name="AdminStatistics" component={AdminStatisticsScreen} />
         <Stack.Screen  name="ProductDetail" component={ProductDetailScreen}   options={{headerShown:true, title:'Детали'}} />
+        <Stack.Screen  name="AddProduct" component={AddProductScreen}   options={{headerShown:true, title:'Добавить товар'}} />
         
         {/* Экран подкатегорий и продуктов */}
         <Stack.Screen

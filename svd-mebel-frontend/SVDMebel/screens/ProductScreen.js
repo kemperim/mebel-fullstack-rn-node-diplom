@@ -2,16 +2,32 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, ActivityIndicator, StyleSheet, Image, TouchableOpacity, Animated } from 'react-native';
 import axios from 'axios';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage'; // Импортируем AsyncStorage
 
 const ProductScreen = ({ route, navigation }) => {
   const { subcategoryId } = route.params;
   const [products, setProducts] = useState([]);
-  const [cart, setCart] = useState([]);
+  const [cartItemsFromServer, setCartItemsFromServer] = useState([]); // Состояние для товаров в корзине с сервера
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [fadeAnim] = useState(new Animated.Value(0));
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isCheckingCart, setIsCheckingCart] = useState(true); // Состояние проверки корзины
 
   useEffect(() => {
+    const checkAuthAndFetch = async () => {
+      const token = await AsyncStorage.getItem('token');
+      const userId = await AsyncStorage.getItem('userId');
+      if (token && userId) {
+        setIsAuthenticated(true);
+        fetchCartItems(userId, token);
+      } else {
+        setIsAuthenticated(false);
+        setIsCheckingCart(false); // Проверка не нужна, если не авторизован
+      }
+      fetchProducts();
+    };
+
     const fetchProducts = async () => {
       try {
         const res = await axios.get(`http://192.168.8.100:5000/products/products/${subcategoryId}`);
@@ -29,30 +45,60 @@ const ProductScreen = ({ route, navigation }) => {
       }
     };
 
-    fetchProducts();
+    checkAuthAndFetch();
   }, [subcategoryId]);
 
-  const handleAddToCart = async (product) => {
-    const isAlreadyInCart = cart.some(item => item.id === product.id);
-    if (!isAlreadyInCart) {
-      try {
-        const res = await axios.post('http://192.168.8.100:5000/cart/add', {
-          productId: product.id,
-          userId: 1, // Здесь замените на актуальный userId
-        });
+  const fetchCartItems = async (userId, token) => {
+    setIsCheckingCart(true);
+    try {
+      const res = await axios.get(`http://192.168.8.100:5000/cart/${userId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setCartItemsFromServer(res.data.map(item => item.product_id)); // Сохраняем только ID товаров
+    } catch (error) {
+      console.error('Ошибка при получении товаров из корзины:', error);
+      setError('Не удалось загрузить корзину.');
+    } finally {
+      setIsCheckingCart(false);
+    }
+  };
 
-        if (res.status === 201) {
-          setCart(prevCart => [...prevCart, product]);
-        }
-      } catch (error) {
-        console.error('Ошибка при добавлении товара в корзину:', error);
-        setError('Не удалось добавить товар в корзину');
+  const handleAddToCart = async (product) => {
+    if (!isAuthenticated) {
+      alert('Для добавления в корзину необходимо авторизоваться.');
+      navigation.navigate('Login'); // Или другой экран авторизации
+      return;
+    }
+
+    const token = await AsyncStorage.getItem('token');
+    const userId = await AsyncStorage.getItem('userId');
+
+    if (cartItemsFromServer.includes(product.id)) {
+      alert('Товар уже в корзине.');
+      return;
+    }
+
+    try {
+      const res = await axios.post(
+        'http://192.168.8.100:5000/cart/add',
+        { productId: product.id, quantity: 1 },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      if (res.status === 201) {
+        setCartItemsFromServer(prevCart => [...prevCart, product.id]);
+        alert('Товар успешно добавлен в корзину.');
+      } else {
+        alert('Не удалось добавить товар в корзину.');
       }
+    } catch (error) {
+      console.error('Ошибка при добавлении товара в корзину:', error);
+      setError('Не удалось добавить товар в корзину.');
     }
   };
 
   const renderItem = ({ item }) => {
-    const isInCart = cart.some(cartItem => cartItem.id === item.id);
+    const isInCart = cartItemsFromServer.includes(item.id);
 
     return (
       <TouchableOpacity
@@ -72,10 +118,16 @@ const ProductScreen = ({ route, navigation }) => {
           <TouchableOpacity
             style={[styles.addToCartButton, isInCart && styles.buttonDisabled]}
             onPress={() => handleAddToCart(item)}
-            disabled={isInCart}
+            disabled={isInCart || !isAuthenticated || isCheckingCart}
           >
             <Text style={styles.addToCartText}>
-              {isInCart ? 'В корзине' : 'Добавить в корзину'}
+              {isCheckingCart
+                ? 'Проверка...'
+                : isInCart
+                  ? 'В корзине'
+                  : isAuthenticated
+                    ? 'Добавить'
+                    : 'Авторизация'}
             </Text>
           </TouchableOpacity>
         </View>

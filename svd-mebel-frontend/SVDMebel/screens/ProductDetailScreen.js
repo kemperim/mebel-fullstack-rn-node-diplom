@@ -11,20 +11,21 @@ const ProductDetailScreen = ({ route }) => {
   const [error, setError] = useState('');
   const [isAdded, setIsAdded] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isCheckingCart, setIsCheckingCart] = useState(true); // Новое состояние
 
   useEffect(() => {
     const fetchProductDetails = async () => {
       try {
         const token = await AsyncStorage.getItem('token');
         const userId = await AsyncStorage.getItem('userId');
-  
+
         // Проверка авторизации
         if (token && userId) {
           setIsAuthenticated(true);
         } else {
           setIsAuthenticated(false);
         }
-  
+
         const res = await axios.get(`http://192.168.8.100:5000/products/product/${productId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -33,49 +34,58 @@ const ProductDetailScreen = ({ route }) => {
       } catch (err) {
         console.error('Ошибка загрузки данных товара:', err);
         setError('Не удалось загрузить данные товара');
+      } finally {
+        setLoading(false);
       }
     };
-  
+
     const checkProductInCart = async () => {
+      setIsCheckingCart(true); // Начинаем проверку
       try {
         const token = await AsyncStorage.getItem('token');
         const userId = await AsyncStorage.getItem('userId');
-  
+
         if (!userId) {
           console.error('User ID is missing');
           return;
         }
-  
+
         // Получаем данные о корзине
         const cartRes = await axios.get(`http://192.168.8.100:5000/cart/${userId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-  
+
         console.log('Корзина:', cartRes.data);
-        const isProductInCart = cartRes.data.some(item => item.productId === productId);
+        console.log('productId текущего товара:', productId);
+        const isProductInCart = cartRes.data.some(item => item.product_id === productId);
         setIsAdded(isProductInCart);
       } catch (err) {
         console.error('Ошибка при проверке корзины:', err);
         setError('Не удалось проверить корзину');
+      } finally {
+        setIsCheckingCart(false); // Завершили проверку
       }
     };
-  
+
     fetchProductDetails();
-    checkProductInCart();
-  }, [productId]);
-  
-  // Обработчик для добавления товара в корзину
+    if (isAuthenticated) {
+      checkProductInCart();
+    } else {
+      setIsCheckingCart(false); // Если не авторизован, проверка не нужна
+    }
+  }, [productId, isAuthenticated]);
+
   const handleAddToCart = async () => {
     if (!isAuthenticated) {
       alert('Для добавления в корзину необходимо авторизоваться');
       return;
     }
-  
+
     if (isAdded) {
       alert('Товар уже в корзине');
       return;
     }
-  
+
     try {
       const token = await AsyncStorage.getItem('token');
       const response = await axios.post(
@@ -85,9 +95,9 @@ const ProductDetailScreen = ({ route }) => {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-  
+
       console.log('Ответ от сервера:', response);
-  
+
       if (response.data?.message === 'Товар успешно добавлен в корзину') {
         setIsAdded(true);
         alert('Товар успешно добавлен в корзину');
@@ -99,8 +109,9 @@ const ProductDetailScreen = ({ route }) => {
       alert('Не удалось добавить товар в корзину. Пожалуйста, попробуйте позже.');
     }
   };
-  
-  // Кнопка добавления в корзину
+
+  console.log('Значение isAdded перед рендером кнопки:', isAdded);
+
   return (
     <View style={styles.wrapper}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -109,17 +120,17 @@ const ProductDetailScreen = ({ route }) => {
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.imagesContainer}>
               {product.image && <Image source={{ uri: product.image }} style={styles.productImage} />}
             </ScrollView>
-  
+
             <Text style={styles.productName}>{product.name}</Text>
             <Text style={styles.productPrice}>{product.price} ₽</Text>
-  
+
             <View style={styles.rating}>
               <Ionicons name="star" size={16} color="#FFD700" />
               <Text style={styles.productRating}>{product.rating}</Text>
             </View>
-  
+
             <Text style={styles.productDescription}>{product.description}</Text>
-  
+
             {product.attributes?.length > 0 && (
               <View style={styles.productAttributes}>
                 <Text style={styles.attributesTitle}>Характеристики</Text>
@@ -133,25 +144,27 @@ const ProductDetailScreen = ({ route }) => {
           </View>
         )}
       </ScrollView>
-  
+
       <View style={styles.bottomBar}>
         <TouchableOpacity
           style={[styles.addToCartButton, isAdded && styles.addedButton]}
           onPress={handleAddToCart}
-          disabled={isAdded || !isAuthenticated} // Проверка авторизации и добавления в корзину
+          disabled={isAdded || !isAuthenticated || isCheckingCart} // Блокируем во время проверки
         >
           <Text style={[styles.addToCartText, isAdded && styles.addedText]}>
-            {isAdded
-              ? 'Товар в корзине'
-              : isAuthenticated
-              ? 'Добавить в корзину'
-              : 'Авторизуйтесь, чтобы добавить в корзину'}
+            {isCheckingCart
+              ? 'Проверка корзины...'
+              : isAdded
+                ? 'Товар в корзине'
+                : isAuthenticated
+                  ? 'Добавить в корзину'
+                  : 'Авторизуйтесь, чтобы добавить в корзину'}
           </Text>
         </TouchableOpacity>
       </View>
     </View>
   );
-}  
+};
 
 const styles = StyleSheet.create({
   wrapper: {

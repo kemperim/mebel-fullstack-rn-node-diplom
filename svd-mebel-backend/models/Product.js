@@ -33,15 +33,15 @@ const Product = sequelize.define('Product', {
   },
   ar_model_path: {
     type: DataTypes.STRING,
-    allowNull: true, // если модель AR не обязательна
+    allowNull: true, // Если модель AR не обязательна
   },
   image: {
     type: DataTypes.STRING,
-    allowNull: true, // если картинка не обязательна
+    allowNull: true, // Если картинка не обязательна
   },
 }, {
   tableName: 'products',
-  timestamps: false,
+  timestamps: false, // Здесь стоит включить timestamps, если ты хочешь отслеживать дату создания/обновления
 });
 
 Product.associate = (models) => {
