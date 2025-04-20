@@ -19,7 +19,7 @@ const CartScreen = ({ navigation }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true); // Состояние загрузки
 
-  const userId = 1; // Заменить на реальный ID пользователя
+  const userId = 0; // Заменить на реальный ID пользователя
 
   const checkAuthentication = async () => {
     console.log('checkAuthentication вызван');
@@ -66,8 +66,7 @@ const CartScreen = ({ navigation }) => {
         console.log('fetchCart: получен статус 401 - токен истек');
         await AsyncStorage.removeItem('token');
         setIsAuthenticated(false);
-        navigation.navigate('Login');
-        alert('Ваша сессия истекла. Пожалуйста, войдите снова.');
+       
       } else {
         alert('Не удалось загрузить корзину. Пожалуйста, попробуйте позже.');
       }
@@ -206,7 +205,7 @@ const CartScreen = ({ navigation }) => {
           </View>
           <TouchableOpacity
             style={styles.checkoutButton}
-            onPress={() => navigation.navigate('Checkout')}
+            onPress={() => navigation.navigate('CheckoutScreen')}
           >
             <Text style={styles.checkoutButtonText}>Перейти к оформлению</Text>
           </TouchableOpacity>
@@ -329,7 +328,7 @@ const styles = StyleSheet.create({
   },
   emptyCartText: {
     fontSize: 18,
-    color: '#6B8E6B',
+    color: 'gray',
     textAlign: 'center',
     marginTop: 40,
   },

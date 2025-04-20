@@ -1,3 +1,5 @@
+console.warn = () => {}; 
+
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import {
   View,
@@ -21,12 +23,13 @@ const CatalogScreen = ({ navigation }) => {
   const [error, setError] = useState('');
   const flatListRef = useRef(null);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const sliderRef = useRef(null);
+  const [autoScrollInterval, setAutoScrollInterval] = useState(null); // Состояние для хранения ID интервала
 
-  // Замените на реальные URL ваших изображений
   const sliderImages = [
-    { id: '1', imageUrl: '../assets/img_ban1.png' },
-    { id: '2', imageUrl: '../assets/img_ban2.png' },
-    { id: '3', imageUrl: '..assets/img_ban3.png' },
+    { id: '1', imageUrl: require('../assets/img_ban1.png') },
+    { id: '2', imageUrl: require('../assets/img_ban2.png') },
+    { id: '3', imageUrl: require('../assets/img_ban3.png') },
   ];
 
   const onViewableItemsChanged = useCallback(({ viewableItems }) => {
@@ -39,6 +42,14 @@ const CatalogScreen = ({ navigation }) => {
 
   const scrollTo = useCallback((index) => {
     flatListRef.current?.scrollToOffset({
+      offset: index * width,
+      animated: true,
+    });
+    setCurrentIndex(index);
+  }, [width]);
+
+  const scrollToSlider = useCallback((index) => {
+    sliderRef.current?.scrollToOffset({
       offset: index * width,
       animated: true,
     });
@@ -61,8 +72,21 @@ const CatalogScreen = ({ navigation }) => {
     fetchData();
   }, []);
 
+  useEffect(() => {
+    // Запускаем таймер при монтировании компонента
+    const intervalId = setInterval(() => {
+      const nextIndex = (currentIndex + 1) % sliderImages.length;
+      scrollToSlider(nextIndex);
+    }, 3000); // Интервал в 3 секунды (настрой по желанию)
+
+    setAutoScrollInterval(intervalId);
+
+    // Очищаем таймер при размонтировании компонента
+    return () => clearInterval(intervalId);
+  }, [currentIndex, sliderImages.length, scrollToSlider]); // Зависимости useEffect
+
   const SliderItem = ({ item }) => (
-    <Image source={{ uri: item.imageUrl }} style={styles.sliderImage} />
+    <Image source={item.imageUrl} style={styles.sliderImage} />
   );
 
   if (loading) {
@@ -76,7 +100,7 @@ const CatalogScreen = ({ navigation }) => {
       {/* Слайдер с картинками */}
       <View style={styles.sliderContainer}>
         <FlatList
-          ref={flatListRef}
+          ref={sliderRef}
           data={sliderImages}
           renderItem={({ item }) => <SliderItem item={item} />}
           keyExtractor={(item) => item.id}
@@ -96,7 +120,7 @@ const CatalogScreen = ({ navigation }) => {
                 styles.paginationDot,
                 currentIndex === index && styles.paginationDotActive,
               ]}
-              onPress={() => scrollTo(index)}
+              onPress={() => scrollToSlider(index)}
             />
           ))}
         </View>
@@ -139,6 +163,7 @@ const styles = StyleSheet.create({
     height: 200,
     width: '100%',
     overflow: 'hidden',
+    borderRadius: 10,
   },
   slider: {
     width: '100%',

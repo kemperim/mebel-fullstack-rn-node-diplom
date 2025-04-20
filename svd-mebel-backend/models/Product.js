@@ -1,5 +1,7 @@
 const { Sequelize, DataTypes } = require('sequelize');
 const sequelize = require('../config/db'); // Подключение к базе данных
+const Order = require('./Order'); // Импортируем модель Order
+const OrderItem = require('./OrderItem'); // Импортируем модель OrderItem
 
 const Product = sequelize.define('Product', {
   id: {
@@ -48,6 +50,17 @@ Product.associate = (models) => {
   Product.belongsTo(models.Category, { foreignKey: 'category_id' });
   Product.belongsTo(models.Subcategory, { foreignKey: 'subcategory_id' });
   Product.hasMany(models.ProductAttributeValue, { foreignKey: 'product_id' });
+  Product.hasMany(models.ProductImage, {
+    foreignKey: 'product_id',
+    as: 'images', // Важно, чтобы псевдоним соответствовал тому, что вы используете в include
+  });
+  // Определение ассоциации "многие-ко-многим" с Order через OrderItem
+  Product.belongsToMany(models.Order, {
+    through: models.OrderItem,
+    foreignKey: 'product_id',
+    otherKey: 'order_id',
+    as: 'orders', // Псевдоним для связи
+  });
 };
 
 module.exports = Product; // Экспортируем саму модель

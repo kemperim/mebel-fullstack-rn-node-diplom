@@ -20,7 +20,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import ProductDetailScreen from "./screens/ProductDetailScreen";
 import AddProductScreen from "./components/AddProduct";
-
+import CheckoutScreen from './screens/CheckoutScreen';
+import MyOrdersScreen from './screens/MyOrdersScreen';
+import OrderDetailsScreen from './screens/OrderDetailsScreen';
 import axios from 'axios';
 
 const Tab = createBottomTabNavigator();
@@ -110,6 +112,9 @@ const App = () => {
         <Stack.Screen name="AdminStatistics" component={AdminStatisticsScreen} />
         <Stack.Screen  name="ProductDetail" component={ProductDetailScreen}   options={{headerShown:true, title:'Детали'}} />
         <Stack.Screen  name="AddProduct" component={AddProductScreen}   options={{headerShown:true, title:'Добавить товар'}} />
+        <Stack.Screen  name="CheckoutScreen" component={CheckoutScreen}   options={{headerShown:true, title:'Оформление заказа'}} />
+        <Stack.Screen name="Orders" component={MyOrdersScreen}  options={{headerShown:true, title:'Мои заказы'}}/>
+        <Stack.Screen name="OrderDetails" component={OrderDetailsScreen}  options={{headerShown:true, title:'Детали заказа'}}/>
         
         {/* Экран подкатегорий и продуктов */}
         <Stack.Screen

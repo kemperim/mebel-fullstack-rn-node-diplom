@@ -1,426 +1,559 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
-  View,
-  Text,
-  Image,
-  StyleSheet,
-  TouchableOpacity,
-  ActivityIndicator,
-  Animated,
-  ScrollView,
-  Alert,
-  FlatList
+    View,
+    Text,
+    Image,
+    StyleSheet,
+    TouchableOpacity,
+    ActivityIndicator,
+    ScrollView,
+    Alert,
+    FlatList,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import { Button, TextInput } from "react-native-paper";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
 
-const scaleAnim = new Animated.Value(0.8);
-
 const ProfileScreen = ({ navigation }) => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [address, setAddress] = useState("");
-  const [phone, setPhone] = useState("");
-  const [savingAddress, setSavingAddress] = useState(false);
-  const [savingPhone, setSavingPhone] = useState(false);
-  const [isEditingAddress, setIsEditingAddress] = useState(false);
-  const [isEditingPhone, setIsEditingPhone] = useState(false);
-  const [cartItems, setCartItems] = useState([]);
+    const [user, setUser] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [address, setAddress] = useState("");
+    const [phone, setPhone] = useState("");
+    const [savingAddress, setSavingAddress] = useState(false);
+    const [savingPhone, setSavingPhone] = useState(false);
+    const [isEditingAddress, setIsEditingAddress] = useState(false);
+    const [isEditingPhone, setIsEditingPhone] = useState(false);
+    const [cartItems, setCartItems] = useState([]);
 
-  // Функция для получения данных пользователя и корзины
-  const fetchUserData = async () => {
-    try {
-      const token = await AsyncStorage.getItem("token");
-      if (!token) {
-        setUser(null);
-        return;
-      }
+    const fetchUserData = useCallback(async () => {
+        setLoading(true);
+        try {
+            const token = await AsyncStorage.getItem("token");
+            if (token) {
+                const response = await axios.get("http://192.168.8.100:5000/auth/me", {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                setUser(response.data);
+                setAddress(response.data.address || "");
+                setPhone(response.data.phone || "");
 
-      const response = await axios.get("http://192.168.8.100:5000/auth/me", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      setUser(response.data);
-      setAddress(response.data.address || "");
-      setPhone(response.data.phone || "");
-
-      const userId = response.data.id;
-      const cartResponse = await axios.get(`http://192.168.8.100:5000/cart/${userId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      const cartItemsData = cartResponse.data.map(item => item.Product);
-      setCartItems(cartItemsData);
-    } catch (error) {
-      setUser(null);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Вызываем fetchUserData при монтировании и при возврате на экран
-  useEffect(() => {
-    fetchUserData();
-  }, []);
-
-  // Используем useFocusEffect для обновления данных при возвращении на экран
-  useFocusEffect(
-    React.useCallback(() => {
-      fetchUserData(); // Перезагружаем данные при фокусе
-    }, [])
-  );
-
-  const handleLogout = async () => {
-    await AsyncStorage.removeItem("token");
-    setUser(null);
-    navigation.navigate("Login");
-  };
-
-  const saveAddress = async () => {
-    try {
-      setSavingAddress(true);
-      const token = await AsyncStorage.getItem("token");
-      await axios.put(
-        "http://192.168.8.100:5000/user/profile/address",
-        { address },
-        {
-          headers: { Authorization: `Bearer ${token}` },
+                const userId = response.data.id;
+                const cartResponse = await axios.get(`http://192.168.8.100:5000/cart/${userId}`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                const cartItemsData = cartResponse.data.map(item => item.Product);
+                setCartItems(cartItemsData);
+            } else {
+                setUser(null);
+            }
+        } catch (error) {
+            setUser(null);
+            console.error("Ошибка при загрузке данных пользователя:", error);
+        } finally {
+            setLoading(false);
         }
-      );
-      Alert.alert("Успешно", "Адрес сохранён");
-    } catch (error) {
-      Alert.alert("Ошибка", "Не удалось сохранить адрес");
-    } finally {
-      setSavingAddress(false);
-    }
-  };
+    }, []);
 
-  const savePhone = async () => {
-    try {
-      setSavingPhone(true);
-      const token = await AsyncStorage.getItem("token");
-      await axios.put(
-        "http://192.168.8.100:5000/user/profile/phone",
-        { phone },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      Alert.alert("Успешно", "Номер телефона сохранён");
-    } catch (error) {
-      Alert.alert("Ошибка", "Не удалось сохранить номер телефона");
-    } finally {
-      setSavingPhone(false);
-    }
-  };
+    useEffect(() => {
+        fetchUserData();
+    }, [fetchUserData]);
 
-  const renderCartItem = ({ item }) => (
-    <TouchableOpacity
-      style={styles.cartItem}
-      onPress={() => navigation.navigate('ProductDetail', { productId: item.id })}
-    >
-      <Image source={{ uri: item.image }} style={styles.cartItemImage} />
-      <Text style={styles.cartItemText}>{item.name}</Text>
-      <Text style={styles.cartItemText}>${item.price}</Text>
-    </TouchableOpacity>
-  );
-
-  if (loading) {
-    return (
-      <View style={styles.container}>
-        <ActivityIndicator size="large" color="#4CAF50" />
-      </View>
+    useFocusEffect(
+        useCallback(() => {
+            fetchUserData();
+        }, [fetchUserData])
     );
-  }
 
-  return (
-    <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
-      <View style={styles.header}>
-        <Text style={styles.userName}>
-          {user ? "Приветствуем " + user.name + "!" : "Гость"}
-        </Text>
+    const handleLogout = async () => {
+        await AsyncStorage.removeItem("token");
+        setUser(null);
+        navigation.navigate("Main");
+    };
 
-        <View style={styles.iconContainer}>
-          {user?.role === "admin" && (
-            <TouchableOpacity onPress={() => navigation.navigate("AdminPanel")}>
-              <Ionicons name="key-outline" size={24} color="#43A047" style={styles.adminIcon} />
-            </TouchableOpacity>
-          )}
-          <TouchableOpacity onPress={() => navigation.navigate("Settings")}>
-            <Ionicons name="settings-outline" size={24} color="#388E3C" />
-          </TouchableOpacity>
-        </View>
-      </View>
+    const saveAddress = async () => {
+        setSavingAddress(true);
+        try {
+            const token = await AsyncStorage.getItem("token");
+            await axios.put(
+                "http://192.168.8.100:5000/user/profile/address",
+                { address },
+                {
+                    headers: { Authorization: `Bearer ${token}` },
+                }
+            );
+            Alert.alert("Успешно", "Адрес сохранён");
+            setIsEditingAddress(false);
+        } catch (error) {
+            Alert.alert("Ошибка", "Не удалось сохранить адрес");
+        } finally {
+            setSavingAddress(false);
+        }
+    };
 
-      {user ? (
-        <>
-          <TouchableOpacity style={styles.item} onPress={() => navigation.navigate("Orders")}>
-            <Text style={styles.itemText}>📦 Мои заказы</Text>
-          </TouchableOpacity>
+    const savePhone = async () => {
+        setSavingPhone(true);
+        try {
+            const token = await AsyncStorage.getItem("token");
+            await axios.put(
+                "http://192.168.8.100:5000/user/profile/phone",
+                { phone },
+                {
+                    headers: { Authorization: `Bearer ${token}` },
+                }
+            );
+            Alert.alert("Успешно", "Номер телефона сохранён");
+            setIsEditingPhone(false);
+        } catch (error) {
+            Alert.alert("Ошибка", "Не удалось сохранить номер телефона");
+        } finally {
+            setSavingPhone(false);
+        }
+    };
 
-          <View style={styles.item}>
-            <TouchableOpacity style={styles.item} onPress={() => navigation.navigate("Корзина")}>
-              <Text style={styles.itemText}>🛒 Корзина </Text>
-            </TouchableOpacity>
+    const renderCartItem = ({ item }) => (
+        <TouchableOpacity
+            style={styles.cartItem}
+            onPress={() => navigation.navigate("ProductDetail", { productId: item.id })}
+        >
+            <Image source={{ uri: item.image }} style={styles.cartItemImage} />
+            <Text style={styles.cartItemName}>{item.name}</Text>
+            <Text style={styles.cartItemPrice}>{item.price}</Text>
+        </TouchableOpacity>
+    );
 
-            {cartItems.length > 0 ? (
-              <View style={styles.cartSliderContainer}>
-                <FlatList
-                  data={cartItems}
-                  renderItem={renderCartItem}
-                  keyExtractor={(item) => item.id.toString()}
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                />
-              </View>
+    if (loading) {
+        return (
+            <View style={styles.containerCentered}>
+                <ActivityIndicator size="large" color="#4CAF50" />
+            </View>
+        );
+    }
+
+    return (
+        <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
+            {user ? (
+                <>
+                    <View style={styles.header}>
+                        <View style={styles.profileInfo}>
+                            <View style={styles.avatarContainer}>
+                                {user.avatar ? (
+                                    <Image source={{ uri: user.avatar }} style={styles.avatar} />
+                                ) : (
+                                    <View style={styles.defaultAvatar}>
+                                        <Ionicons name="person-outline" size={60} color="#fff" />
+                                    </View>
+                                )}
+                            </View>
+                            <Text style={styles.profileName}>{user.name}</Text>
+                            {user.email && <Text style={styles.profileEmail}>{user.email}</Text>}
+                        </View>
+                   
+                    </View>
+
+                    <View style={styles.section}>
+                        <Text style={styles.sectionTitle}>Действия</Text>
+                        <TouchableOpacity style={styles.actionItem} onPress={() => navigation.navigate("Orders")}>
+                            <Ionicons name="receipt-outline" size={20} color="#388E3C" style={styles.actionIcon} />
+                            <Text style={styles.actionText}>Мои заказы</Text>
+                            <Ionicons name="chevron-forward-outline" size={20} color="#888" />
+                        </TouchableOpacity>
+
+                        <TouchableOpacity style={styles.actionItem} onPress={() => navigation.navigate("Корзина")}> 
+                            <Ionicons name="cart-outline" size={20} color="#388E3C" style={styles.actionIcon} />
+                            <Text style={styles.actionText}>Корзина</Text>
+                            <Ionicons name="chevron-forward-outline" size={20} color="#888" />
+                        </TouchableOpacity>
+
+                        {cartItems.length > 0 ? (
+                            <FlatList
+                                data={cartItems}
+                                renderItem={renderCartItem}
+                                keyExtractor={(item) => item.id.toString()}
+                                horizontal
+                                showsHorizontalScrollIndicator={false}
+                                style={styles.cartSliderContainer}
+                            />
+                        ) : (
+                            <Text style={styles.noItemsText}>Корзина пуста</Text>
+                        )}
+
+                        {user?.role === "admin" && (
+                            <TouchableOpacity style={styles.actionItem} onPress={() => navigation.navigate("AdminPanel")}> 
+                                <MaterialCommunityIcons name="view-dashboard-outline" size={20} color="#2E7D32" style={styles.actionIcon} />
+                                <Text style={styles.actionText}>Админ панель</Text>
+                            </TouchableOpacity>
+                        )}
+                    </View>
+
+                    <View style={styles.section}>
+                        <Text style={styles.sectionTitle}>Информация</Text>
+
+                        <View style={styles.infoItem}>
+                            <View style={styles.infoRow}>
+                                <Ionicons name="location-outline" size={20} color="#388E3C" style={styles.infoIcon} />
+                                <Text style={styles.infoLabel}>Адрес доставки:</Text>
+                                <TouchableOpacity onPress={() => setIsEditingAddress(true)}>
+                                    <Ionicons name="pencil-outline" size={18} color="#888" />
+                                </TouchableOpacity>
+                            </View>
+                            {!isEditingAddress ? (
+                                <Text style={styles.infoValue}>{address || "Нажмите, чтобы добавить адрес"}</Text>
+                            ) : (
+                                <>
+                                    <TextInput
+                                        mode="outlined"
+                                        placeholder="Введите адрес"
+                                        value={address}
+                                        onChangeText={setAddress}
+                                        style={styles.input}
+                                    />
+                                    <Button
+                                        mode="contained"
+                                        onPress={saveAddress}
+                                        loading={savingAddress}
+                                        disabled={savingAddress}
+                                        style={styles.saveButton}
+                                    >
+                                        Сохранить
+                                    </Button>
+                                </>
+                            )}
+                        </View>
+
+                        <View style={styles.infoItem}>
+                            <View style={styles.infoRow}>
+                                <Ionicons name="call-outline" size={20} color="#388E3C" style={styles.infoIcon} />
+                                <Text style={styles.infoLabel}>Номер телефона:</Text>
+                                <TouchableOpacity onPress={() => setIsEditingPhone(true)}>
+                                    <Ionicons name="pencil-outline" size={18} color="#888" />
+                                </TouchableOpacity>
+                            </View>
+                            {!isEditingPhone ? (
+                                <Text style={styles.infoValue}>{phone || "Нажмите, чтобы добавить номер телефона"}</Text>
+                            ) : (
+                                <>
+                                    <TextInput
+                                        mode="outlined"
+                                        placeholder="Введите номер телефона"
+                                        value={phone}
+                                        onChangeText={setPhone}
+                                        style={styles.input}
+                                        keyboardType="phone-pad"
+                                    />
+                                    <Button
+                                        mode="contained"
+                                        onPress={savePhone}
+                                        loading={savingPhone}
+                                        disabled={savingPhone}
+                                        style={styles.saveButton}
+                                    >
+                                        Сохранить
+                                    </Button>
+                                </>
+                            )}
+                        </View>
+                    </View>
+
+                    <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+                        <Ionicons name="log-out-outline" size={20} color="#fff" style={styles.logoutIcon} />
+                        <Text style={styles.logoutText}>Выйти</Text>
+                    </TouchableOpacity>
+                </>
             ) : (
-              <Text style={styles.noItemsText}>Корзина пуста</Text>
+                <View style={styles.guestContainer}>
+                    <View style={styles.avatarCircle}>
+                        <Image source={require('../assets/logo.png')} style={styles.avatar} resizeMode="contain" />
+                    </View>
+                    <Text style={styles.greeting}>
+                        Давайте знакомиться! {"\n"} Регистрация даст возможность оформлять заказы!
+                    </Text>
+                    <Button
+                        mode="contained"
+                        style={styles.registerButton}
+                        labelStyle={styles.buttonText}
+                        onPress={() => navigation.navigate("Register")}
+                    >
+                        ЗАРЕГИСТРИРОВАТЬСЯ
+                    </Button>
+                    <TouchableOpacity style={styles.loginButton} onPress={() => navigation.navigate("Login")}> 
+                        <Text style={styles.loginText}>Уже есть аккаунт? Войти</Text>
+                    </TouchableOpacity>
+                </View>
             )}
-          </View>
-
-          <View style={styles.itemColumn}>
-            <TouchableOpacity onPress={() => setIsEditingAddress(true)}>
-              <Text style={styles.itemText}>📍 Адрес доставки:</Text>
-              {!isEditingAddress && (
-                <Text style={{ marginTop: 8, color: "#666" }}>
-                  {address || "Нажмите, чтобы добавить адрес"}
-                </Text>
-              )}
-            </TouchableOpacity>
-
-            {isEditingAddress && (
-              <>
-                <TextInput
-                  mode="outlined"
-                  placeholder="Введите адрес"
-                  value={address}
-                  onChangeText={setAddress}
-                  style={styles.addressInput}
-                />
-                <Button
-                  mode="contained"
-                  onPress={async () => {
-                    await saveAddress();
-                    setIsEditingAddress(false);
-                  }}
-                  loading={savingAddress}
-                  disabled={savingAddress}
-                  style={styles.saveButton}
-                >
-                  Сохранить адрес
-                </Button>
-              </>
-            )}
-          </View>
-
-          <View style={styles.itemColumn}>
-            <TouchableOpacity onPress={() => setIsEditingPhone(true)}>
-              <Text style={styles.itemText}>📞 Номер телефона:</Text>
-              {!isEditingPhone && (
-                <Text style={{ marginTop: 8, color: "#666" }}>
-                  {phone || "Нажмите, чтобы добавить номер телефона"}
-                </Text>
-              )}
-            </TouchableOpacity>
-
-            {isEditingPhone && (
-              <>
-                <TextInput
-                  mode="outlined"
-                  placeholder="Введите номер телефона"
-                  value={phone}
-                  onChangeText={setPhone}
-                  style={styles.addressInput}
-                  keyboardType="phone-pad"
-                />
-                <Button
-                  mode="contained"
-                  onPress={async () => {
-                    await savePhone();
-                    setIsEditingPhone(false);
-                  }}
-                  loading={savingPhone}
-                  disabled={savingPhone}
-                  style={styles.saveButton}
-                >
-                  Сохранить номер
-                </Button>
-              </>
-            )}
-          </View>
-
-          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-            <Text style={styles.logoutText}>🚪 ВЫЙТИ</Text>
-          </TouchableOpacity>
-        </>
-      ) : (
-        <>
-          <Text style={styles.greeting}>
-            Давайте знакомиться! {"\n"} Регистрация даст возможность оформлять заказы!
-          </Text>
-          <Button
-            mode="contained"
-            style={styles.registerButton}
-            labelStyle={styles.buttonText}
-            onPress={() => navigation.navigate("Register")}
-          >
-            ЗАРЕГИСТРИРОВАТЬСЯ
-          </Button>
-        </>
-      )}
-    </ScrollView>
-  );
+        </ScrollView>
+    );
 };
+
+
+
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: "#F5F8F5",
-    paddingHorizontal: 20,
-    paddingTop: 40,
+      flex: 1,
+      backgroundColor: "#F5F8F5",
+      paddingHorizontal: 20,
+      paddingTop: 20,
   },
   header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 30,
+      flexDirection: 'column',
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginBottom: 20,
   },
-  userName: {
-    fontSize: 22,
-    fontWeight: "600",
-    color: "#2E7D32",
+  profileInfo: {
+      alignItems: "center",
   },
-  iconContainer: {
-    flexDirection: "row",
-    gap: 16,
-  },
-  adminIcon: {
-    marginRight: 10,
-  },
-  avatarCircle: {
-    alignSelf: "center",
-    backgroundColor: "#E8F5E9",
-    borderRadius: 60,
-    width: 120,
-    height: 120,
-    marginBottom: 30,
-    justifyContent: "center",
-    alignItems: "center",
-    elevation: 4,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
+  avatarContainer: {
+      width: 80,
+      height: 80,
+      borderRadius: 40,
+      overflow: "hidden",
+      marginBottom: 10,
+      backgroundColor: '#E0E0E0',
+      justifyContent: 'center',
+      alignItems: 'center',
   },
   avatar: {
-    width: 80,
-    height: 80,
-    resizeMode: "contain",
+      width: 80,
+      height: 80,
   },
-  item: {
-    backgroundColor: "#FFFFFF",
-    padding: 16,
-    borderRadius: 16,
-    marginBottom: 12,
-    flexDirection: "column", // Чтобы кнопка и слайдер шли друг под другом
+  defaultAvatar: {
+      width: 80,
+      height: 80,
+      borderRadius: 40,
+      backgroundColor: '#4CAF50',
+      justifyContent: 'center',
+      alignItems: 'center',
+  },
+  profileName: {
+      fontSize: 22,
+      fontWeight: "bold",
+      color: "#2E7D32",
+      marginBottom: 5,
+  },
+  profileEmail: {
+      fontSize: 16,
+      color: "#666",
+  },
+  adminIconContainer: {
+      padding: 10,
+  },
+  section: {
+      marginBottom: 20,
+      backgroundColor: "#FFFFFF",
+      borderRadius: 16,
+      padding: 16,
+      elevation: 2,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.1,
+      shadowRadius: 2,
+  },
+  sectionTitle: {
+      fontSize: 18,
+      fontWeight: "bold",
+      color: "#388E3C",
+      marginBottom: 15,
+  },
+  actionItem: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      paddingVertical: 12,
+      borderBottomWidth: 1,
+      borderColor: "#eee",
+  },
+  actionIcon: {
+      marginRight: 15,
+  },
+  actionText: {
+      fontSize: 16,
+      color: "#333",
+      flex: 1,
+  },
+  
 
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
+      cartContainer: {
+          paddingVertical: 15,
+          backgroundColor: '#F9F9F9',
+          borderRadius: 12,
+          marginTop: 10,
+          elevation: 1,
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 0.5 },
+          shadowOpacity: 0.05,
+          shadowRadius: 1,
+          overflow: 'hidden', // Чтобы borderRadius работал корректно с FlatList
+      },
+      cartButton: {
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          paddingHorizontal: 15,
+          paddingVertical: 12,
+      },
+      cartIcon: {
+          marginRight: 12,
+      },
+      cartText: {
+          fontSize: 17,
+          color: "#333",
+          flex: 1,
+      },
+      cartSliderContainer: {
+          paddingLeft: 15,
+          marginTop: 10,
+      },
+      cartItem: {
+          backgroundColor: "#FFFFFF",
+          padding: 12,
+          borderRadius: 10,
+          marginRight: 12,
+          width: 110,
+          height: 130,
+          justifyContent: "space-around",
+          alignItems: "center",
+          elevation: 2,
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 1 },
+          shadowOpacity: 0.1,
+          shadowRadius: 2,
+          marginBottom:5,
+          marginTop:5,
+      },
+      cartItemImage: {
+          width: 60,
+          height: 60,
+          resizeMode: "contain",
+      },
+      cartItemName: {
+          fontSize: 13,
+          color: "#388E3C",
+          textAlign: "center",
+      },
+      cartItemPrice: {
+          fontSize: 15,
+          fontWeight: "bold",
+          color: "#2E7D32",
+          textAlign: "center",
+      },
+      noItemsText: {
+          fontSize: 16,
+          color: "#777",
+          marginTop: 15,
+          paddingHorizontal: 15,
+          textAlign: 'center',
+      },
+  infoItem: {
+      paddingVertical: 12,
+      borderBottomWidth: 1,
+      borderColor: "#eee",
   },
-  itemText: {
-    fontSize: 16,
-    fontWeight: "500",
-    color: "#388E3C",
+  infoRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      marginBottom: 8,
   },
-  itemColumn: {
-    backgroundColor: "#FFFFFF",
-    padding: 16,
-    borderRadius: 16,
-    marginBottom: 12,
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
+  infoIcon: {
+      marginRight: 15,
   },
-  addressInput: {
-    marginTop: 10,
-    backgroundColor: "#FFF",
+  infoLabel: {
+      fontSize: 16,
+      fontWeight: "500",
+      color: "#333",
+      flex: 1,
+  },
+  infoValue: {
+      fontSize: 16,
+      color: "#666",
+      marginLeft: 35,
+  },
+  input: {
+      marginTop: 10,
+      backgroundColor: "#FFF",
   },
   saveButton: {
-    marginTop: 10,
+      marginTop: 10,
   },
   logoutButton: {
-    backgroundColor: "#FF7043",
-    paddingVertical: 12,
-    borderRadius: 8,
-    marginTop: 20,
-    marginBottom: 40,
+      backgroundColor: '#D32F2F',
+      paddingVertical: 14,
+      borderRadius: 10,
+      marginTop: 30,
+      alignItems: 'center',
+      justifyContent: 'center',
+      elevation: 3,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.2,
+      shadowRadius: 2,
+      flexDirection: 'row',
+      marginBottom:50,
+  },
+  logoutIcon: {
+      marginRight: 10,
   },
   logoutText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#FFFFFF",
-    textAlign: "center",
+      fontSize: 16,
+      fontWeight: "bold",
+      color: "#FFFFFF",
   },
-  cartSliderContainer: {
-    width: '100%',
-    height: 200, // Ограничиваем высоту слайдера
-    overflow: 'hidden', // Чтобы слайдер не выходил за рамки
-    marginTop: 12, 
+  guestContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: 20,
   },
-  cartItem: {
-    backgroundColor: "#FFFFFF",
-    padding: 12,
-    borderRadius: 15, // Более скругленные углы
-    marginRight: 20, // Немного больше отступ
-    width: 200, // Немного больше ширина для лучшего визуального восприятия
-    height: 200, // Соответственно увеличена высота
-    justifyContent: "center",
-    alignItems: "center",
-    elevation: 5, // Более выраженная тень
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 }, // Изменение позиции тени для эффекта подъема
-    shadowOpacity: 0.2, // Сделаем тень более выраженной
-    shadowRadius: 10, // Увеличим радиус тени для плавности
-    borderWidth: 1, // Добавим границу для выделения
-    borderColor: "#DDDDDD", // Цвет границы
-    backgroundColor: "#F9F9F9", // Легкий сероватый фон для контраста
-    overflow: "hidden", // Прячем элементы, выходящие за пределы
-    transform: [{ scale: 1 }], // Плавное увеличение при наведении
-    transition: "transform 0.3s ease", // Плавное увеличение
+  avatarCircle: {
+      backgroundColor: '#E8F5E9',
+      borderRadius: 75,
+      width: 150,
+      height: 150,
+      marginBottom: 30,
+      justifyContent: 'center',
+      alignItems: 'center',
+      elevation: 4,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.15,
+      shadowRadius: 4,
   },
-  cartItemImage: {
-    width: 120,
-    height: 120,
-    resizeMode: "contain",
-  },
-  cartItemText: {
-    marginTop: 10,
-    fontSize: 14,
-    color: "#388E3C",
-    textAlign: "center",
-  },
-  noItemsText: {
-    textAlign: "center",
-    color: "#666",
+  avatar: {
+      width: 100,
+      height: 100,
+      resizeMode: 'contain',
   },
   greeting: {
-    fontSize: 20,
-    textAlign: "center",
-    color: "#388E3C",
+      fontSize: 20,
+      textAlign: "center",
+      color: "#388E3C",
+      marginBottom: 30,
   },
   registerButton: {
-    marginTop: 20,
+      marginTop: 20,
+      backgroundColor: '#43A047',
+      paddingVertical: 14,
+      borderRadius: 10,
+      alignItems: 'center',
+      elevation: 2,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.15,
+      shadowRadius: 2,
   },
   buttonText: {
-    fontSize: 16,
-    fontWeight: "500",
+      fontSize: 16,
+      fontWeight: "bold",
+      color: '#fff',
+  },
+  loginButton: {
+      marginTop: 20,
+  },
+  loginText: {
+      color: '#388E3C',
+      fontSize: 16,
   },
 });
 

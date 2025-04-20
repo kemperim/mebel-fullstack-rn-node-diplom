@@ -11,7 +11,7 @@ const ProductDetailScreen = ({ route }) => {
   const [error, setError] = useState('');
   const [isAdded, setIsAdded] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isCheckingCart, setIsCheckingCart] = useState(true); // Новое состояние
+  const [isCheckingCart, setIsCheckingCart] = useState(true);
 
   useEffect(() => {
     const fetchProductDetails = async () => {
@@ -19,7 +19,6 @@ const ProductDetailScreen = ({ route }) => {
         const token = await AsyncStorage.getItem('token');
         const userId = await AsyncStorage.getItem('userId');
 
-        // Проверка авторизации
         if (token && userId) {
           setIsAuthenticated(true);
         } else {
@@ -40,7 +39,7 @@ const ProductDetailScreen = ({ route }) => {
     };
 
     const checkProductInCart = async () => {
-      setIsCheckingCart(true); // Начинаем проверку
+      setIsCheckingCart(true);
       try {
         const token = await AsyncStorage.getItem('token');
         const userId = await AsyncStorage.getItem('userId');
@@ -50,7 +49,6 @@ const ProductDetailScreen = ({ route }) => {
           return;
         }
 
-        // Получаем данные о корзине
         const cartRes = await axios.get(`http://192.168.8.100:5000/cart/${userId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -63,7 +61,7 @@ const ProductDetailScreen = ({ route }) => {
         console.error('Ошибка при проверке корзины:', err);
         setError('Не удалось проверить корзину');
       } finally {
-        setIsCheckingCart(false); // Завершили проверку
+        setIsCheckingCart(false);
       }
     };
 
@@ -71,7 +69,7 @@ const ProductDetailScreen = ({ route }) => {
     if (isAuthenticated) {
       checkProductInCart();
     } else {
-      setIsCheckingCart(false); // Если не авторизован, проверка не нужна
+      setIsCheckingCart(false);
     }
   }, [productId, isAuthenticated]);
 
@@ -110,20 +108,23 @@ const ProductDetailScreen = ({ route }) => {
     }
   };
 
-  console.log('Значение isAdded перед рендером кнопки:', isAdded);
-
   return (
     <View style={styles.wrapper}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {product && (
           <View style={styles.productDetail}>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.imagesContainer}>
-              {product.image && <Image source={{ uri: product.image }} style={styles.productImage} />}
-            </ScrollView>
+            {product.image && (
+              <View style={styles.imageContainer}>
+                <Image
+                  source={{ uri: product.image }}
+                  style={styles.productImage}
+                  resizeMode="cover"
+                />
+              </View>
+            )}
 
             <Text style={styles.productName}>{product.name}</Text>
             <Text style={styles.productPrice}>{product.price} ₽</Text>
-
             <View style={styles.rating}>
               <Ionicons name="star" size={16} color="#FFD700" />
               <Text style={styles.productRating}>{product.rating}</Text>
@@ -149,7 +150,7 @@ const ProductDetailScreen = ({ route }) => {
         <TouchableOpacity
           style={[styles.addToCartButton, isAdded && styles.addedButton]}
           onPress={handleAddToCart}
-          disabled={isAdded || !isAuthenticated || isCheckingCart} // Блокируем во время проверки
+          disabled={isAdded || !isAuthenticated || isCheckingCart}
         >
           <Text style={[styles.addToCartText, isAdded && styles.addedText]}>
             {isCheckingCart
@@ -184,15 +185,14 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 4,
   },
-  imagesContainer: {
+  imageContainer: {
     marginBottom: 16,
+    alignItems: 'center', // Центрирование изображения по горизонтали
   },
   productImage: {
     width: 320,
     height: 240,
     borderRadius: 12,
-    marginRight: 10,
-    resizeMode: 'cover',
   },
   productName: {
     fontSize: 24,

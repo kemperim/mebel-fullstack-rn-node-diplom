@@ -6,7 +6,11 @@ const ProductAttribute = require('./ProductAttribute');
 const Category = require('./Category');
 const Subcategory = require('./Subcategory');
 const Cart = require('./Cart');
-const User = require('./User');  // Правильно импортируем модель User
+const User = require('./User');
+const ProductImage = require('./ProductImage');
+const Order = require('./Order');
+const OrderItem = require('./OrderItem')
+
 
 const models = {
   Product,
@@ -15,10 +19,15 @@ const models = {
   Category,
   Subcategory,
   Cart,
-  User  // Добавляем User в объект models
+  User,
+  ProductImage,
+  Order,
+  OrderItem,
+
 };
 
-// Инициализация всех ассоциаций
+
+// Применяем ассоциации, если они есть
 Object.values(models).forEach((model) => {
   if (model.associate) {
     model.associate(models);

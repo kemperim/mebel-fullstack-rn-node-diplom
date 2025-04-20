@@ -1,5 +1,4 @@
-const { Product, ProductAttributeValue, ProductAttribute, Subcategory } = require('../models');
-
+const { Product, ProductAttributeValue, ProductAttribute, Subcategory, ProductImage } = require('../models');
 // Получение товаров по подкатегории (существующий метод)
 exports.getProductsBySubcategory = async (req, res) => {
   const subcategoryId = req.params.subcategoryId;
@@ -61,6 +60,11 @@ exports.getProductById = async (req, res) => {
               attributes: ['name']
             }
           ]
+        },
+        {
+          model: ProductImage,
+          as: 'images', // Псевдоним для связи с изображениями
+          attributes: ['image_url']
         }
       ]
     });
@@ -76,15 +80,18 @@ exports.getProductById = async (req, res) => {
       description: product.description,
       price: product.price,
       stock_quantity: product.stock_quantity,
-      image: product.image,
+      image: product.image, // Пока оставляем, но в будущем можно убрать
       ar_model_path: product.ar_model_path,
       attributes: product.ProductAttributeValues.map(attrVal => ({
         name: attrVal.ProductAttribute.name,
         value: attrVal.value
-      }))
+      })),
+      images: product.images.map(img => img.image_url) // Добавляем массив URL изображений
     };
 
     res.json(result);
+
+    console.log('Товар с изображениями (по ID):', JSON.stringify(product, null, 2));
 
   } catch (err) {
     console.error(err);
