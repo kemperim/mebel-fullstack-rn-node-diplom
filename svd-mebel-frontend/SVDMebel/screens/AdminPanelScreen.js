@@ -6,7 +6,7 @@ const AdminPanelScreen = ({ navigation }) => {
   const menuItems = [
     { title: "Пользователи", icon: "people-outline", screen: "AdminUsers" },
     { title: "Заказы", icon: "cart-outline", screen: "AdminOrders" },
-    { title: "Товары", icon: "cube-outline", screen: "AddProduct" },
+    { title: "Товары", icon: "cube-outline", screen: "AdminAllProducts" },
     { title: "Статистика", icon: "bar-chart-outline", screen: "AdminStatistics" },
   ];
 

@@ -1,7 +1,9 @@
 const express = require("express");
 const router = express.Router();
-const User = require("../models/User");
+
 const authMiddleware = require("../middleware/authMiddleware");
+const isAdmin = require('../middleware/isAdmin');
+const { Order, User, Product } = require('../models');
 
 // Проверка на админа
 const adminMiddleware = (req, res, next) => {
@@ -83,6 +85,47 @@ router.delete("/users/:id", authMiddleware, adminMiddleware, async (req, res) =>
       console.error("Ошибка удаления пользователя:", error);
       res.status(500).json({ message: "Ошибка сервера" });
     }
+  });
+
+
+
+  router.get('/admin/orders', authMiddleware, async (req, res) => {
+    try {
+      const orders = await Order.findAll({
+        include: [
+          { 
+            model: User, 
+            as: 'user',  // Используем alias 'user'
+            attributes: ['id', 'name']  // Указываем, какие поля нужны
+          },
+          { 
+            model: Product, 
+            as: 'products',  // Используем alias 'products'
+            attributes: ['id', 'name']  // Указываем, какие поля нужны
+          }
+        ],
+        order: [['created_at', 'DESC']],  // Сортировка по дате создания
+      });
+      res.json({ orders });
+    } catch (err) {
+      console.error('Ошибка загрузки заказов', err);
+      res.status(500).json({ message: 'Ошибка сервера' });
+    }
+  });
+
+  const ORDER_STATUSES = ['Новый', 'В обработке', 'Доставляется', 'Завершён', 'Отменён'];
+
+  
+  router.put('/admin/orders/:id/status', authMiddleware, async (req, res) => {
+    const { status } = req.body;
+    const order = await Order.findByPk(req.params.id);
+    
+    if (!order) return res.status(404).json({ error: 'Order not found' });
+  
+    order.status = status;
+    await order.save();
+  
+    res.json({ message: 'Order updated', order });
   });
   
   

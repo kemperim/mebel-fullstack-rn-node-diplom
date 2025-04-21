@@ -1,30 +1,48 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const OrderDetailsScreen = ({ route }) => {
-  const { orderId } = route.params; 
+  const { orderId } = route.params;
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    console.log('orderId:', orderId);
-
-    axios.get(`http://192.168.8.100:5000/orders/order/${orderId}`)
-      .then(res => {
-        setOrder(res.data.order);
-        setLoading(false);
-      })
-      .catch(err => {
+    const fetchOrderDetails = async () => {
+      try {
+        const token = await AsyncStorage.getItem('token');
+        console.log(token);
+        const response = await axios.get(`http://192.168.8.100:5000/orders/order/${orderId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setOrder(response.data.order);
+      } catch (err) {
         console.error('Ошибка загрузки деталей заказа', err);
+        setError('Ошибка загрузки деталей заказа');
+      } finally {
         setLoading(false);
-      });
+      }
+    };
+
+    fetchOrderDetails();
   }, [orderId]);
 
   if (loading) {
     return (
       <View style={styles.center}>
         <ActivityIndicator size="large" color="#3366ff" />
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.center}>
+        <Text>{error}</Text>
       </View>
     );
   }

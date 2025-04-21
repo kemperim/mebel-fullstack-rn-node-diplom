@@ -19,7 +19,7 @@ const createOrder = async (req, res) => {
       total_price,
       address,
       phone_number,
-      status: 'pending',
+      status: 'Оформлен',
     });
 
     const orderItems = await Promise.all(products.map(async (product) => {
@@ -107,6 +107,7 @@ const getOrderDetails = async (req, res) => {
         {
           model: Product,
           as: 'products',
+          attributes: [ 'id','name', 'image'],
           through: {
             attributes: ['quantity', 'price'],
           },

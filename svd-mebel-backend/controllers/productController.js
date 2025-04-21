@@ -98,3 +98,34 @@ exports.getProductById = async (req, res) => {
     res.status(500).json({ message: 'Ошибка при получении товара' });
   }
 };
+
+
+exports.getAllProducts = async (req, res) => {
+  try {
+    const products = await Product.findAll({
+      include: [
+        {
+          model: ProductImage,
+          as: 'images',
+          attributes: ['image_url']
+        }
+      ]
+    });
+
+    const result = products.map(product => ({
+      id: product.id,
+      name: product.name,
+      description: product.description,
+      price: product.price,
+      stock_quantity: product.stock_quantity,
+      image: product.image,
+      ar_model_path: product.ar_model_path,
+      images: product.images.map(img => img.image_url)
+    }));
+
+    res.json(result);
+  } catch (err) {
+    console.error('Ошибка при получении всех товаров:', err);
+    res.status(500).json({ message: 'Ошибка при получении всех товаров' });
+  }
+};

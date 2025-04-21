@@ -11,6 +11,8 @@ const { Product } = require('../models');  // Импорт через index.js
 router.get('/products/:subcategoryId', productController.getProductsBySubcategory);
 
 router.get('/product/:productId', productController.getProductById);
+router.get('/products', productController.getAllProducts);
+
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {

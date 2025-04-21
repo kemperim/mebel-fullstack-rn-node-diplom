@@ -23,6 +23,8 @@ import AddProductScreen from "./components/AddProduct";
 import CheckoutScreen from './screens/CheckoutScreen';
 import MyOrdersScreen from './screens/MyOrdersScreen';
 import OrderDetailsScreen from './screens/OrderDetailsScreen';
+import  updateOrderStatus  from './components/updateOrderStatus';
+import AdminAllProducts from './components/AdminAllProducts';
 import axios from 'axios';
 
 const Tab = createBottomTabNavigator();
@@ -115,6 +117,8 @@ const App = () => {
         <Stack.Screen  name="CheckoutScreen" component={CheckoutScreen}   options={{headerShown:true, title:'Оформление заказа'}} />
         <Stack.Screen name="Orders" component={MyOrdersScreen}  options={{headerShown:true, title:'Мои заказы'}}/>
         <Stack.Screen name="OrderDetails" component={OrderDetailsScreen}  options={{headerShown:true, title:'Детали заказа'}}/>
+        <Stack.Screen name="updateOrderStatus" component={updateOrderStatus}  options={{headerShown:true, title:'Детали заказа'}}/>
+        <Stack.Screen name="AdminAllProducts" component={AdminAllProducts}  options={{headerShown:true, title:'Все товары'}}/>
         
         {/* Экран подкатегорий и продуктов */}
         <Stack.Screen
