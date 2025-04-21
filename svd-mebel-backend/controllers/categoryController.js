@@ -3,17 +3,18 @@ const { Category, Subcategory } = require('../models'); // Импортируе�
 
 exports.getAllCategories = async (req, res) => {
   try {
-    const categories = await Category.findAll({
-      attributes: ['id', 'name'],
-    });
+    // Запрос всех подкатегорий
+    const subcategories = await Subcategory.findAll();
 
-    if (categories.length === 0) {
-      return res.status(404).json({ message: 'Категории не найдены' });
+    // Если подкатегории не найдены
+    if (subcategories.length === 0) {
+      return res.status(404).json({ message: 'Подкатегории не найдены' });
     }
 
-    res.json(categories);
+    // Возвращаем все подкатегории
+    res.json(subcategories);
   } catch (error) {
-    console.error('Ошибка получения категорий:', error);
+    console.error('Ошибка получения подкатегорий:', error);
     res.status(500).json({ message: 'Ошибка на сервере' });
   }
 };

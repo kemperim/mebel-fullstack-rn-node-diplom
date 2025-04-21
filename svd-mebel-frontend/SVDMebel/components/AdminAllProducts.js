@@ -42,8 +42,7 @@ const AdminAllProducts = () => {
   const renderItem = ({ item }) => (
     <TouchableOpacity   style={styles.productItem}
     onPress={() => navigation.navigate('ProductDetail', { productId: item.id })}
-    activeOpacity={0.9}
-    style={styles.card}>
+    activeOpacity={0.9} style={styles.card}>
       {item.images?.length > 0 || item.image ? (
         <Image
           source={{ uri: item.image}}
