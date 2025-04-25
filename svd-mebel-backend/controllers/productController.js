@@ -1,5 +1,12 @@
-const { Product, ProductAttributeValue, ProductAttribute, Subcategory, ProductImage } = require('../models');
-// Получение товаров по подкатегории (существующий метод)
+const {
+  Product,
+  ProductAttributeValue,
+  ProductAttribute,
+  Subcategory,
+  ProductImage
+} = require('../models');
+
+// Получение товаров по подкатегории
 exports.getProductsBySubcategory = async (req, res) => {
   const subcategoryId = req.params.subcategoryId;
 
@@ -9,9 +16,11 @@ exports.getProductsBySubcategory = async (req, res) => {
       include: [
         {
           model: ProductAttributeValue,
+          as: 'ProductAttributeValues',
           include: [
             {
               model: ProductAttribute,
+              as: 'attribute',
               attributes: ['name']
             }
           ]
@@ -19,22 +28,19 @@ exports.getProductsBySubcategory = async (req, res) => {
       ]
     });
 
-    // Форматирование данных
-    const result = products.map(product => {
-      return {
-        id: product.id,
-        name: product.name,
-        description: product.description,
-        price: product.price,
-        stock_quantity: product.stock_quantity,
-        image: product.image,
-        ar_model_path: product.ar_model_path,
-        attributes: product.ProductAttributeValues.map(attrVal => ({
-          name: attrVal.ProductAttribute.name,
-          value: attrVal.value
-        }))
-      };
-    });
+    const result = products.map(product => ({
+      id: product.id,
+      name: product.name,
+      description: product.description,
+      price: product.price,
+      stock_quantity: product.stock_quantity,
+      image: product.image,
+      ar_model_path: product.ar_model_path,
+      attributes: (product.ProductAttributeValues || []).map(attrVal => ({
+        name: attrVal.attribute.name,
+        value: attrVal.value
+      }))
+    }));
 
     res.json(result);
 
@@ -54,16 +60,18 @@ exports.getProductById = async (req, res) => {
       include: [
         {
           model: ProductAttributeValue,
+          as: 'ProductAttributeValues',
           include: [
             {
               model: ProductAttribute,
+              as: 'attribute',
               attributes: ['name']
             }
           ]
         },
         {
           model: ProductImage,
-          as: 'images', // Псевдоним для связи с изображениями
+          as: 'images',
           attributes: ['image_url']
         }
       ]
@@ -73,25 +81,22 @@ exports.getProductById = async (req, res) => {
       return res.status(404).json({ message: 'Товар не найден' });
     }
 
-    // Форматирование данных
     const result = {
       id: product.id,
       name: product.name,
       description: product.description,
       price: product.price,
       stock_quantity: product.stock_quantity,
-      image: product.image, // Пока оставляем, но в будущем можно убрать
+      image: product.image,
       ar_model_path: product.ar_model_path,
-      attributes: product.ProductAttributeValues.map(attrVal => ({
-        name: attrVal.ProductAttribute.name,
+      attributes: (product && product.ProductAttributeValues || []).map(attrVal => ({
+        name: attrVal.attribute.name,
         value: attrVal.value
       })),
-      images: product.images.map(img => img.image_url) // Добавляем массив URL изображений
+      images: product.images.map(img => img.image_url)
     };
 
     res.json(result);
-
-    console.log('Товар с изображениями (по ID):', JSON.stringify(product, null, 2));
 
   } catch (err) {
     console.error(err);
@@ -99,7 +104,7 @@ exports.getProductById = async (req, res) => {
   }
 };
 
-
+// Получение всех товаров
 exports.getAllProducts = async (req, res) => {
   try {
     const products = await Product.findAll({
