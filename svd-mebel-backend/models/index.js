@@ -13,6 +13,7 @@ const OrderItem = require('./OrderItem')
 
 
 const models = {
+  sequelize: sequelize,
   Product,
   ProductAttributeValue,
   ProductAttribute,

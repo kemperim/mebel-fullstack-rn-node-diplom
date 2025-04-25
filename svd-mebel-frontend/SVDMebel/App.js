@@ -25,6 +25,7 @@ import MyOrdersScreen from './screens/MyOrdersScreen';
 import OrderDetailsScreen from './screens/OrderDetailsScreen';
 import  updateOrderStatus  from './components/updateOrderStatus';
 import AdminAllProducts from './components/AdminAllProducts';
+import ImagePickerScreen from './screens/CateGor';
 import axios from 'axios';
 
 const Tab = createBottomTabNavigator();
@@ -119,6 +120,8 @@ const App = () => {
         <Stack.Screen name="OrderDetails" component={OrderDetailsScreen}  options={{headerShown:true, title:'Детали заказа'}}/>
         <Stack.Screen name="updateOrderStatus" component={updateOrderStatus}  options={{headerShown:true, title:'Детали заказа'}}/>
         <Stack.Screen name="AdminAllProducts" component={AdminAllProducts}  options={{headerShown:true, title:'Все товары'}}/>
+        
+        <Stack.Screen name="ImagePickerScreen" component={ImagePickerScreen}/>
         
         {/* Экран подкатегорий и продуктов */}
         <Stack.Screen

@@ -19,7 +19,7 @@ const AdminAllProducts = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await axios.get('http://192.168.8.100:5000/products/products');
+        const response = await axios.get('http://192.168.92.67:5000/products/products');
         setProducts(response.data);
       } catch (err) {
         console.error('Ошибка при загрузке товаров:', err);
@@ -40,7 +40,7 @@ const AdminAllProducts = () => {
   };
 
   const renderItem = ({ item }) => (
-    <TouchableOpacity   style={styles.productItem}
+    <TouchableOpacity   
     onPress={() => navigation.navigate('ProductDetail', { productId: item.id })}
     activeOpacity={0.9} style={styles.card}>
       {item.images?.length > 0 || item.image ? (

@@ -59,7 +59,7 @@ const CatalogScreen = ({ navigation }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await axios.get('http://192.168.8.100:5000/category');
+        const res = await axios.get('http://192.168.92.67:5000/category');
         setCategories(res.data);
       } catch (err) {
         console.error('Ошибка загрузки:', err);

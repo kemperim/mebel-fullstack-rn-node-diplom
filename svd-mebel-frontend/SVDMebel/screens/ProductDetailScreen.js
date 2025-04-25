@@ -25,7 +25,7 @@ const ProductDetailScreen = ({ route }) => {
           setIsAuthenticated(false);
         }
 
-        const res = await axios.get(`http://192.168.8.100:5000/products/product/${productId}`, {
+        const res = await axios.get(`http://192.168.92.67:5000/products/product/${productId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setProduct(res.data);
@@ -49,7 +49,7 @@ const ProductDetailScreen = ({ route }) => {
           return;
         }
 
-        const cartRes = await axios.get(`http://192.168.8.100:5000/cart/${userId}`, {
+        const cartRes = await axios.get(`http://192.168.92.67:5000/cart/${userId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -73,6 +73,9 @@ const ProductDetailScreen = ({ route }) => {
     }
   }, [productId, isAuthenticated]);
 
+
+  const isOutOfStock = product?.stock_quantity === 0;
+
   const handleAddToCart = async () => {
     if (!isAuthenticated) {
       alert('Для добавления в корзину необходимо авторизоваться');
@@ -87,7 +90,7 @@ const ProductDetailScreen = ({ route }) => {
     try {
       const token = await AsyncStorage.getItem('token');
       const response = await axios.post(
-        `http://192.168.8.100:5000/cart/add`,
+        `http://192.168.92.67:5000/cart/add`,
         { productId, quantity: 1 },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -125,6 +128,10 @@ const ProductDetailScreen = ({ route }) => {
 
             <Text style={styles.productName}>{product.name}</Text>
             <Text style={styles.productPrice}>{product.price} ₽</Text>
+            <Text style={{ fontSize: 16, color: '#666', marginBottom: 8 }}>
+  В наличии: {product.stock_quantity} шт.
+</Text>
+
             <View style={styles.rating}>
               <Ionicons name="star" size={16} color="#FFD700" />
               <Text style={styles.productRating}>{product.rating}</Text>
@@ -147,21 +154,34 @@ const ProductDetailScreen = ({ route }) => {
       </ScrollView>
 
       <View style={styles.bottomBar}>
-        <TouchableOpacity
-          style={[styles.addToCartButton, isAdded && styles.addedButton]}
-          onPress={handleAddToCart}
-          disabled={isAdded || !isAuthenticated || isCheckingCart}
-        >
-          <Text style={[styles.addToCartText, isAdded && styles.addedText]}>
-            {isCheckingCart
-              ? 'Проверка корзины...'
-              : isAdded
-                ? 'Товар в корзине'
-                : isAuthenticated
-                  ? 'Добавить в корзину'
-                  : 'Авторизуйтесь, чтобы добавить в корзину'}
-          </Text>
-        </TouchableOpacity>
+      <TouchableOpacity
+  style={[
+    styles.addToCartButton,
+    isAdded && styles.addedButton,
+    isOutOfStock && styles.disabledButton,
+  ]}
+  onPress={handleAddToCart}
+  disabled={isAdded || !isAuthenticated || isCheckingCart || isOutOfStock}
+>
+  <Text
+    style={[
+      styles.addToCartText,
+      isAdded && styles.addedText,
+      isOutOfStock && styles.disabledText,
+    ]}
+  >
+    {isOutOfStock
+      ? 'Нет в наличии'
+      : isCheckingCart
+        ? 'Проверка корзины...'
+        : isAdded
+          ? 'Товар в корзине'
+          : isAuthenticated
+            ? 'Добавить в корзину'
+            : 'Авторизуйтесь, чтобы добавить в корзину'}
+  </Text>
+</TouchableOpacity>
+
       </View>
     </View>
   );
@@ -269,6 +289,13 @@ const styles = StyleSheet.create({
   addedText: {
     color: '#388e3c',
   },
+  disabledButton: {
+    backgroundColor: '#e0e0e0',
+  },
+  disabledText: {
+    color: '#888',
+  },
+  
 });
 
 export default ProductDetailScreen;

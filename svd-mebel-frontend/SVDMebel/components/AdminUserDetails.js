@@ -20,7 +20,7 @@ const AdminUserDetailsScreen = ({ route, navigation }) => {
   const fetchUserDetails = async () => { // Убираем userId из параметров
     try {
       const token = await AsyncStorage.getItem("token");
-      const response = await axios.get(`http://192.168.8.100:5000/admin/users/${userId}`, {
+      const response = await axios.get(`http://192.168.92.67:5000/admin/users/${userId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setUser(response.data); // Исправлено: setUser вместо setSelectedUser
@@ -42,7 +42,7 @@ const AdminUserDetailsScreen = ({ route, navigation }) => {
     try {
       const token = await AsyncStorage.getItem("token");
       await axios.put(
-        `http://192.168.8.100:5000/admin/users/${userId}`,
+        `http://192.168.92.67:5000/admin/users/${userId}`,
         { name, email, role, phone, address },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -61,7 +61,7 @@ const AdminUserDetailsScreen = ({ route, navigation }) => {
         onPress: async () => {
           try {
             const token = await AsyncStorage.getItem("token");
-            await axios.delete(`http://192.168.8.100:5000/admin/users/${userId}`, {
+            await axios.delete(`http://192.168.92.67:5000/admin/users/${userId}`, {
               headers: { Authorization: `Bearer ${token}` },
             });
             navigation.goBack();

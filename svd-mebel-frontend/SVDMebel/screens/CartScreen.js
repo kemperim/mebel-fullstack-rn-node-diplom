@@ -48,7 +48,7 @@ const CartScreen = ({ navigation }) => {
         return;
       }
 
-      const response = await axios.get(`http://192.168.8.100:5000/cart/${userId}`, {
+      const response = await axios.get(`http://192.168.92.67:5000/cart/${userId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -93,7 +93,7 @@ const CartScreen = ({ navigation }) => {
         console.log('Нет токена, пользователь не авторизован');
         return;
       }
-      await axios.put(`http://192.168.8.100:5000/cart/update/${itemId}`, {
+      await axios.put(`http://192.168.92.67:5000/cart/update/${itemId}`, {
         quantity: newQuantity
       }, {
         headers: { Authorization: `Bearer ${token}` }
