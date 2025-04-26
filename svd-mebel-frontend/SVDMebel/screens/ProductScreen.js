@@ -99,6 +99,7 @@ const ProductScreen = ({ route, navigation }) => {
 
   const renderItem = ({ item }) => {
     const isInCart = cartItemsFromServer.includes(item.id);
+    const isOutOfStock = item.stock_quantity === 0; // Проверяем, что stock_quantity равен 0
 
     return (
       <TouchableOpacity
@@ -106,7 +107,7 @@ const ProductScreen = ({ route, navigation }) => {
         onPress={() => navigation.navigate('ProductDetail', { productId: item.id })}
         activeOpacity={0.9}
       >
-       <Image source={{ uri: `http://192.168.92.67:5000${item.image}` }} style={styles.productImage} />
+        <Image source={{ uri: `http://192.168.92.67:5000${item.image}` }} style={styles.productImage} />
         <View style={styles.productDetails}>
           <Text style={styles.productName}>{item.name}</Text>
           <View style={styles.rating}>
@@ -115,21 +116,27 @@ const ProductScreen = ({ route, navigation }) => {
           </View>
           <Text style={styles.productPrice}>{item.price} руб.</Text>
 
-          <TouchableOpacity
-            style={[styles.addToCartButton, isInCart && styles.buttonDisabled]}
-            onPress={() => handleAddToCart(item)}
-            disabled={isInCart || !isAuthenticated || isCheckingCart}
-          >
-            <Text style={styles.addToCartText}>
-              {isCheckingCart
-                ? 'Проверка...'
-                : isInCart
-                  ? 'В корзине'
-                  : isAuthenticated
-                    ? 'Добавить'
-                    : 'Авторизация'}
-            </Text>
-          </TouchableOpacity>
+          {isOutOfStock ? (
+            <View style={styles.outOfStockContainer}>
+              <Text style={styles.outOfStockText}>Нет в наличии</Text>
+            </View>
+          ) : (
+            <TouchableOpacity
+              style={[styles.addToCartButton, isInCart && styles.buttonDisabled]}
+              onPress={() => handleAddToCart(item)}
+              disabled={isInCart || !isAuthenticated || isCheckingCart}
+            >
+              <Text style={styles.addToCartText}>
+                {isCheckingCart
+                  ? 'Проверка...'
+                  : isInCart
+                    ? 'В корзине'
+                    : isAuthenticated
+                      ? 'Добавить'
+                      : 'Авторизация'}
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
       </TouchableOpacity>
     );
@@ -223,6 +230,18 @@ const styles = StyleSheet.create({
     color: 'red',
     textAlign: 'center',
     marginVertical: 10,
+  },
+  outOfStockContainer: {
+    backgroundColor: '#FFCDD2', // Светло-красный цвет для фона
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 6,
+    alignItems: 'center',
+  },
+  outOfStockText: {
+    color: '#D32F2F', // Темно-красный цвет для текста
+    fontSize: 14,
+    fontWeight: '600',
   },
 });
 

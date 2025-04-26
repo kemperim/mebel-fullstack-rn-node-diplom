@@ -22,6 +22,7 @@ const CheckoutScreen = ({ navigation }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
   const [userId, setUserId] = useState(null);
+  const [user, setUser] = useState(null); // Состояние для хранения данных пользователя
 
   const checkAuthentication = async () => {
     console.log('CheckoutScreen: checkAuthentication вызван');
@@ -34,11 +35,28 @@ const CheckoutScreen = ({ navigation }) => {
       setUserId(storedUserId);
       setIsAuthenticated(true);
       fetchCart(storedUserId);
+      fetchUserData(token); // Передаем токен для получения данных пользователя
     } else {
       console.log('CheckoutScreen: Токен или UserId не найден');
       setIsAuthenticated(false);
     }
     setIsAuthLoading(false);
+  };
+
+  const fetchUserData = async (token) => {
+    console.log('CheckoutScreen: fetchUserData вызван');
+    try {
+      const response = await axios.get("http://192.168.92.67:5000/auth/me", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setUser(response.data);
+      setName(response.data.name || ""); // Устанавливаем имя из response.data
+      setAddress(response.data.address || "");
+      setPhone(response.data.phone || "");
+    } catch (error) {
+      console.error('CheckoutScreen: Ошибка при получении данных пользователя', error?.response?.data || error.message);
+      Alert.alert('Ошибка', 'Не удалось загрузить данные пользователя.');
+    }
   };
 
   const fetchCart = async (currentUserId) => {

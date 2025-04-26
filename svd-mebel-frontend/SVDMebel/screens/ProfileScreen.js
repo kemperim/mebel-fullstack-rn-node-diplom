@@ -117,7 +117,7 @@ const ProfileScreen = ({ navigation }) => {
             style={styles.cartItem}
             onPress={() => navigation.navigate("ProductDetail", { productId: item.id })}
         >
-            <Image source={{ uri: item.image }} style={styles.cartItemImage} />
+            <Image source={{ uri: `http://192.168.92.67:5000${item.image}`  }} style={styles.cartItemImage} />
             <Text style={styles.cartItemName}>{item.name}</Text>
             <Text style={styles.cartItemPrice}>{item.price}</Text>
         </TouchableOpacity>

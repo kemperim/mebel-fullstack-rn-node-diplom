@@ -53,7 +53,7 @@ const getCart = async (req, res) => {
       where: { user_id: userId },
       include: {
         model: Product,
-        attributes: ['id', 'name', 'price', 'image'], // только нужные атрибуты
+        attributes: ['id', 'name', 'price', 'image', 'stock_quantity'], // Включаем stock_quantity
       }
     });
 

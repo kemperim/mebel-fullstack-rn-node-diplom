@@ -66,7 +66,7 @@ const CartScreen = ({ navigation }) => {
         console.log('fetchCart: получен статус 401 - токен истек');
         await AsyncStorage.removeItem('token');
         setIsAuthenticated(false);
-       
+
       } else {
         alert('Не удалось загрузить корзину. Пожалуйста, попробуйте позже.');
       }
@@ -111,7 +111,7 @@ const CartScreen = ({ navigation }) => {
         console.log('Нет токена, пользователь не авторизован');
         return;
       }
-      await axios.delete(`http://192.168.8.100:5000/cart/remove/${itemId}`, {
+      await axios.delete(`http://192.168.92.67:5000/cart/remove/${itemId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       fetchCart();
@@ -120,40 +120,50 @@ const CartScreen = ({ navigation }) => {
     }
   };
 
-  const renderItem = ({ item }) => (
-    <View style={styles.cartItem}>
-      <Image source={{ uri: item.Product.image }} style={styles.productImage} />
-      <View style={styles.productInfo}>
-        <View style={styles.productHeader}>
-          <Text style={styles.productName} numberOfLines={2}>{item.Product.name}</Text>
-          <Text style={styles.productPrice}>{item.Product.price} ₽</Text>
-        </View>
-        <View style={styles.controlsRow}>
-          <View style={styles.quantityContainer}>
-            <TouchableOpacity
-              style={styles.quantityButton}
-              onPress={() => updateQuantity(item.id, item.quantity - 1)}
-            >
-              <Text style={styles.quantityText}>−</Text>
-            </TouchableOpacity>
-            <Text style={styles.productQuantity}>{item.quantity}</Text>
-            <TouchableOpacity
-              style={styles.quantityButton}
-              onPress={() => updateQuantity(item.id, item.quantity + 1)}
-            >
-              <Text style={styles.quantityText}>+</Text>
-            </TouchableOpacity>
+  const renderItem = ({ item }) => {
+    const isOutOfStock = item.Product.stock_quantity === 0; // Проверяем stock_quantity
+
+    return (
+      <View style={styles.cartItem}>
+        <Image source={{ uri:  `http://192.168.92.67:5000${item.Product.image}` }} style={styles.productImage} />
+        <View style={styles.productInfo}>
+          <View style={styles.productHeader}>
+            <Text style={styles.productName} numberOfLines={2}>{item.Product.name}</Text>
+            <Text style={styles.productPrice}>{item.Product.price} ₽</Text>
           </View>
-          <TouchableOpacity
-            style={styles.removeButton}
-            onPress={() => removeItem(item.id)}
-          >
-            <Ionicons name="trash-outline" size={22} color="#fff" />
-          </TouchableOpacity>
+          {isOutOfStock ? (
+            <View style={styles.outOfStockContainer}>
+              <Text style={styles.outOfStockText}>Нет в наличии</Text>
+            </View>
+          ) : (
+            <View style={styles.controlsRow}>
+              <View style={styles.quantityContainer}>
+                <TouchableOpacity
+                  style={styles.quantityButton}
+                  onPress={() => updateQuantity(item.id, item.quantity - 1)}
+                >
+                  <Text style={styles.quantityText}>−</Text>
+                </TouchableOpacity>
+                <Text style={styles.productQuantity}>{item.quantity}</Text>
+                <TouchableOpacity
+                  style={styles.quantityButton}
+                  onPress={() => updateQuantity(item.id, item.quantity + 1)}
+                >
+                  <Text style={styles.quantityText}>+</Text>
+                </TouchableOpacity>
+              </View>
+              <TouchableOpacity
+                style={styles.removeButton}
+                onPress={() => removeItem(item.id)}
+              >
+                <Ionicons name="trash-outline" size={22} color="#fff" />
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
       </View>
-    </View>
-  );
+    );
+  };
 
   useFocusEffect(
     useCallback(() => {
@@ -342,6 +352,19 @@ const styles = StyleSheet.create({
   authButtonText: {
     color: '#fff',
     fontSize: 18,
+    fontWeight: '600',
+  },
+  outOfStockContainer: {
+    backgroundColor: '#FFCDD2', // Светло-красный цвет для фона
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  outOfStockText: {
+    color: '#D32F2F', // Темно-красный цвет для текста
+    fontSize: 14,
     fontWeight: '600',
   },
 });

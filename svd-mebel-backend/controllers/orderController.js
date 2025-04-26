@@ -4,6 +4,7 @@ const OrderItem = require('../models/OrderItem');
 const Product = require('../models/Product');
 
 // Создание нового заказа
+// Создание нового заказа
 const createOrder = async (req, res) => {
   try {
     const { total_price, address, phone_number, products } = req.body;
@@ -29,6 +30,19 @@ const createOrder = async (req, res) => {
         return null;
       }
 
+      // Проверяем, достаточно ли товара на складе
+      if (productData.stock_quantity < product.quantity) { // <---- Обновлено на stock_quantity
+        return res.status(400).json({
+          message: `Недостаточно товара "${productData.name}" на складе (доступно: ${productData.stock_quantity}, запрошено: ${product.quantity})`, // <---- Обновлено на stock_quantity
+        });
+      }
+
+      // Уменьшаем количество товара на складе
+      await Product.update(
+        { stock_quantity: productData.stock_quantity - product.quantity }, // <---- Обновлено на stock_quantity
+        { where: { id: product.product_id } }
+      );
+
       return OrderItem.create({
         order_id: newOrder.id,
         product_id: product.product_id,
@@ -36,6 +50,14 @@ const createOrder = async (req, res) => {
         price: productData.price,
       });
     }));
+
+    // Проверяем, были ли ошибки при создании элементов заказа (например, недостаточно товара)
+    if (orderItems.some(item => item instanceof Error)) {
+      // Если была ошибка, возможно, стоит откатить создание заказа.
+      // Это зависит от вашей бизнес-логики.
+      await Order.destroy({ where: { id: newOrder.id } });
+      return; // Запрос уже обработан с ошибкой внутри map
+    }
 
     const validItems = orderItems.filter(item => item !== null);
 
@@ -45,12 +67,12 @@ const createOrder = async (req, res) => {
         {
           model: Product,
           as: 'products',
-          attributes: ['id', 'name', 'price', 'image'],
+          attributes: ['id', 'name', 'price', 'image', 'stock_quantity'], // Включаем stock_quantity
           through: {
-            attributes: ['quantity', 'price']
-          }
-        }
-      ]
+            attributes: ['quantity', 'price'],
+          },
+        },
+      ],
     });
 
     res.status(201).json({
