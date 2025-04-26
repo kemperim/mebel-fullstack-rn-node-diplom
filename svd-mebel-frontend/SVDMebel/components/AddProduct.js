@@ -185,16 +185,14 @@ const AddProduct = () => {
             isValid = false;
         }
 
-        for (let attribute in attributes) {
-            if (!attributes[attribute] && attributes.hasOwnProperty(attribute)) {
-                const attributeInfo = attributes.find(attr => attr.name === attribute);
-                if (attributeInfo) {
-                    Alert.alert('Ошибка', `Заполните атрибут ${attributeInfo.name}`);
-                    isValid = false;
-                    break;
-                }
+        for (let attributeName in product.attributes) {
+            if (!product.attributes[attributeName]) {
+                Alert.alert('Ошибка', `Заполните атрибут ${attributeName}`);
+                isValid = false;
+                break;
             }
         }
+        
 
         if (images.length === 0) {
             Alert.alert('Ошибка', 'Пожалуйста, выберите хотя бы одно изображение');
@@ -207,10 +205,10 @@ const AddProduct = () => {
 
     const handleSubmit = async () => {
         if (!validateFields()) return;
-
+    
         try {
             const formData = new FormData();
-
+    
             // Основные поля товара
             formData.append('name', product.name);
             formData.append('description', product.description);
@@ -218,15 +216,18 @@ const AddProduct = () => {
             formData.append('stock_quantity', product.stock_quantity);
             formData.append('category_id', product.category_id);
             formData.append('subcategory_id', product.subcategory_id);
+            
             if (product.ar_model_path) {
                 formData.append('ar_model_path', product.ar_model_path);
             }
-
-            // Отправляем каждый атрибут как отдельное поле
+    
+            // Добавляем атрибуты как JSON-строку
+            const attributesData = {};
             attributes.forEach(attr => {
-                formData.append(`attributes[${attr.id}]`, product.attributes[attr.name] || '');
+                attributesData[attr.id] = product.attributes[attr.name] || '';
             });
-
+            formData.append('attributes', JSON.stringify(attributesData));
+    
             // Добавляем изображения
             images.forEach((image, index) => {
                 formData.append('images', {
@@ -235,25 +236,50 @@ const AddProduct = () => {
                     type: image.mimeType || 'image/jpeg',
                 });
             });
-
-            console.log('Данные FormData перед отправкой:', Object.fromEntries(formData.entries()));
-            console.log('Отправляем POST-запрос на: http://192.168.92.67:5000/products/add');
-
+    
+            // Логирование для отладки
+            console.log('Отправляемые данные:');
+            console.log('Основные данные:', {
+                name: product.name,
+                description: product.description,
+                price: product.price,
+                stock_quantity: product.stock_quantity,
+                category_id: product.category_id,
+                subcategory_id: product.subcategory_id,
+                ar_model_path: product.ar_model_path,
+            });
+            console.log('Атрибуты:', attributesData);
+            console.log('Количество изображений:', images.length);
+    
             const response = await axios.post('http://192.168.92.67:5000/products/add', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 },
             });
-
+    
             console.log('Ответ сервера:', response.data);
             Alert.alert('Успешно', 'Товар успешно добавлен!');
-            // ... остальной код сброса формы ...
+            
+            // Сброс формы после успешной отправки
+            setProduct({
+                name: '',
+                description: '',
+                price: '',
+                stock_quantity: '',
+                ar_model_path: '',
+                category_id: null,
+                subcategory_id: null,
+                attributes: {},
+            });
+            setImages([]);
+            setSelectedCategory(null);
+            
         } catch (error) {
-            console.error('Ошибка при добавлении товара:', error.response?.data || error);
+            console.error('Ошибка при добавлении товара:', error);
+            console.error('Детали ошибки:', error.response?.data);
             Alert.alert('Ошибка', error.response?.data?.message || 'Не удалось добавить товар');
         }
     };
-
     
     return (
         <ScrollView style={styles.container}>

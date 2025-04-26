@@ -1,19 +1,17 @@
 const express = require('express');
 const router = express.Router();
-const upload = require('../config/multerConfig'); // Используем импортированную конфигурацию multer
+const upload = require('../config/multerConfig');
 const productController = require('../controllers/productController');
-const { Product, ProductImage, sequelize, ProductAttribute, ProductAttributeValue } = require('../models'); // Импортируем ProductAttributeValue
+const { Product, ProductImage, sequelize, ProductAttribute, ProductAttributeValue } = require('../models');
 const { body, validationResult } = require('express-validator');
 const fs = require('fs').promises;
 const path = require('path');
 
-// Определите путь к папке загрузок (убедитесь, что он совпадает с multerConfig)
 const uploadDir = path.join(__dirname, '../uploads/images');
 
 router.get('/products/:subcategoryId', productController.getProductsBySubcategory);
 router.get('/product/:productId', productController.getProductById);
 router.get('/products', productController.getAllProducts);
-
 
 router.get('/attributes/subcategory/:subcategoryId', async (req, res) => {
     const { subcategoryId } = req.params;
@@ -38,10 +36,6 @@ router.post(
         body('description').trim().notEmpty().withMessage('Описание товара обязательно.'),
         body('price').isFloat({ min: 0.01 }).withMessage('Цена должна быть числом больше 0.'),
         body('stock_quantity').isInt({ min: 0 }).withMessage('Количество на складе должно быть целым числом больше или равно 0.'),
-        // *** УДАЛЯЕМ СТАРЫЕ ПРАВИЛА ВАЛИДАЦИИ ДЛЯ АТРИБУТОВ КАК JSON ***
-        // body('attributes').isArray().optional(),
-        // body('attributes.*.attribute_id').isInt({ min: 1 }).optional(),
-        // body('attributes.*.value').notEmpty().optional(),
     ],
     async (req, res) => {
         console.log('Получен POST-запрос на /products/add');
@@ -66,24 +60,24 @@ router.post(
         }
 
         try {
-            const { category_id, subcategory_id, name, description, price, stock_quantity, ar_model_path } = req.body;
-            const firstImagePath = `/uploads/images/${req.files[0].filename}`; // Получаем путь к первому изображению
-            const attributes = [];
+            const { category_id, subcategory_id, name, description, price, stock_quantity, ar_model_path, attributes } = req.body;
+            const firstImagePath = `/uploads/images/${req.files[0].filename}`;
 
-            // Обрабатываем атрибуты, отправленные как отдельные поля формы
-            for (const key in req.body) {
-                if (key.startsWith('attributes[')) {
-                    const attributeId = parseInt(key.split('[')[1].split(']')[0]);
-                    const value = req.body[key];
-                    if (!isNaN(attributeId)) {
-                        attributes.push({ attribute_id: attributeId, value });
-                    }
-                }
+            // Парсим атрибуты из JSON-строки
+            let parsedAttributes = [];
+            try {
+                parsedAttributes = attributes ? JSON.parse(attributes) : {};
+                // Преобразуем объект в массив {attribute_id, value}
+                parsedAttributes = Object.entries(parsedAttributes).map(([attribute_id, value]) => ({
+                    attribute_id: parseInt(attribute_id),
+                    value: String(value)
+                }));
+            } catch (e) {
+                console.error('Ошибка парсинга атрибутов:', e);
+                parsedAttributes = [];
             }
 
-            console.log('Обработанные атрибуты на сервере:', attributes); // <---- ДОБАВЛЕНО ЛОГИРОВАНИЕ
-
-            console.log('Данные для создания товара:', { category_id, subcategory_id, name, description, price, stock_quantity, ar_model_path, attributes, firstImagePath });
+            console.log('Обработанные атрибуты на сервере:', parsedAttributes);
 
             const result = await sequelize.transaction(async (t) => {
                 const newProduct = await Product.create({
@@ -94,79 +88,68 @@ router.post(
                     price: parseFloat(price),
                     stock_quantity: parseInt(stock_quantity),
                     ar_model_path: ar_model_path || null,
-                    image: firstImagePath, // Сохраняем путь к первому изображению
+                    image: firstImagePath,
                 }, { transaction: t });
-                console.log('Товар создан:', newProduct.toJSON());
 
-                const imageRecords = await Promise.all(
-                    req.files.map(file => {
-                        const imageRecord = ProductImage.create({
+                // Сохраняем изображения
+                await Promise.all(
+                    req.files.map(file => 
+                        ProductImage.create({
                             product_id: newProduct.id,
                             image_url: `/uploads/images/${file.filename}`,
-                        }, { transaction: t });
-                        console.log('Запись об изображении создана:', imageRecord);
-                        return imageRecord;
-                    })
+                        }, { transaction: t })
+                    )
                 );
 
-                // Сохраняем атрибуты товара
-                if (attributes && Array.isArray(attributes) && attributes.length > 0) {
-                    console.log('Массив атрибутов перед сохранением:', attributes); // <---- ДОБАВЛЕНО ЛОГИРОВАНИЕ
-                    const attributeValuePromises = attributes.map(attr => {
-                        const attributeValue = ProductAttributeValue.create({
-                            product_id: newProduct.id,
-                            attribute_id: parseInt(attr.attribute_id),
-                            value: attr.value,
-                        }, { transaction: t });
-                        console.log('Значение атрибута создано:', attributeValue);
-                        return attributeValue;
-                    });
-                    await Promise.all(attributeValuePromises);
-                    console.log('Значения атрибутов сохранены.');
+                // Сохраняем атрибуты
+                if (parsedAttributes.length > 0) {
+                    await Promise.all(
+                        parsedAttributes.map(attr => 
+                            ProductAttributeValue.create({
+                                product_id: newProduct.id,
+                                attribute_id: attr.attribute_id,
+                                value: attr.value,
+                            }, { transaction: t })
+                        )
+                    );
                 }
 
-                return { product: newProduct, images: imageRecords };
-            }, { logging: console.log }); // <---- ВКЛЮЧЕНО ЛОГИРОВАНИЕ SQL
+                return newProduct;
+            });
 
-            const productWithDetails = await Product.findByPk(result.product.id, {
+            // Получаем товар со всеми связанными данными
+            const productWithDetails = await Product.findByPk(result.id, {
                 include: [
-                    {
-                        model: ProductImage,
-                        as: 'images',
-                        attributes: ['id', 'image_url']
-                    },
-                    {
-                        model: ProductAttributeValue,
+                    { model: ProductImage, as: 'images' },
+                    { 
+                        model: ProductAttributeValue, 
                         as: 'ProductAttributeValues',
-                        include: [{
-                            model: ProductAttribute,
-                            as: 'attribute',
-                            attributes: ['id', 'name', 'type']
-                        }]
+                        include: [{ model: ProductAttribute, as: 'attribute' }]
                     }
                 ]
             });
-            console.log('Товар с деталями:', productWithDetails ? productWithDetails.toJSON() : null);
 
             res.status(201).json({
                 success: true,
                 message: 'Товар успешно добавлен!',
                 product: productWithDetails
             });
-            console.log('Ответ сервера (успех):', { success: true, message: 'Товар успешно добавлен!', product: productWithDetails ? productWithDetails.toJSON() : null });
 
         } catch (err) {
             console.error('Ошибка при добавлении товара:', err);
-            if (req.files && req.files.length > 0) {
-                await Promise.all(req.files.map(file => fs.unlink(path.join(uploadDir, file.filename)).catch(console.error)));
-                console.log('Удалены загруженные файлы из-за ошибки.');
+            // Удаляем загруженные файлы в случае ошибки
+            if (req.files?.length > 0) {
+                await Promise.all(
+                    req.files.map(file => 
+                        fs.unlink(path.join(uploadDir, file.filename)).catch(console.error)
+                    )
+                );
             }
             res.status(500).json({
                 success: false,
                 message: 'Не удалось добавить товар',
                 error: process.env.NODE_ENV === 'development' ? err.message : undefined
             });
-            console.log('Ответ сервера (ошибка):', { success: false, message: 'Не удалось добавить товар', error: process.env.NODE_ENV === 'development' ? err.message : undefined });
         }
     }
 );
