@@ -149,24 +149,49 @@ const ProfileScreen = ({ navigation }) => {
                             <Text style={styles.profileName}>{user.name}</Text>
                             {user.email && <Text style={styles.profileEmail}>{user.email}</Text>}
                         </View>
-                   
                     </View>
 
                     <View style={styles.section}>
                         <Text style={styles.sectionTitle}>Действия</Text>
-                        <TouchableOpacity style={styles.actionItem} onPress={() => navigation.navigate("Orders")}>
-                            <Ionicons name="receipt-outline" size={20} color="#388E3C" style={styles.actionIcon} />
+                        <TouchableOpacity 
+                            style={styles.actionItem} 
+                            onPress={() => navigation.navigate("Orders")}
+                        >
+                            <View style={styles.actionIconContainer}>
+                                <Ionicons name="receipt-outline" size={24} color="#388E3C" />
+                            </View>
                             <Text style={styles.actionText}>Мои заказы</Text>
                             <Ionicons name="chevron-forward-outline" size={20} color="#888" />
                         </TouchableOpacity>
-
-                        <TouchableOpacity style={styles.actionItem} onPress={() => navigation.navigate("Корзина")}> 
-                            <Ionicons name="cart-outline" size={20} color="#388E3C" style={styles.actionIcon} />
+                      
+                        <TouchableOpacity 
+                            style={styles.actionItem} 
+                            onPress={() => navigation.navigate("Корзина")}
+                        >
+                            <View style={styles.actionIconContainer}>
+                                <Ionicons name="cart-outline" size={24} color="#388E3C" />
+                            </View>
                             <Text style={styles.actionText}>Корзина</Text>
                             <Ionicons name="chevron-forward-outline" size={20} color="#888" />
                         </TouchableOpacity>
 
-                        {cartItems.length > 0 ? (
+                        {user?.role === "admin" && (
+                            <TouchableOpacity 
+                                style={styles.actionItem} 
+                                onPress={() => navigation.navigate("AdminPanel")}
+                            >
+                                <View style={styles.actionIconContainer}>
+                                    <MaterialCommunityIcons name="view-dashboard-outline" size={24} color="#2E7D32" />
+                                </View>
+                                <Text style={styles.actionText}>Админ панель</Text>
+                                <Ionicons name="chevron-forward-outline" size={20} color="#888" />
+                            </TouchableOpacity>
+                        )}
+                    </View>
+
+                    {cartItems.length > 0 && (
+                        <View style={styles.section}>
+                            <Text style={styles.sectionTitle}>В корзине</Text>
                             <FlatList
                                 data={cartItems}
                                 renderItem={renderCartItem}
@@ -175,89 +200,100 @@ const ProfileScreen = ({ navigation }) => {
                                 showsHorizontalScrollIndicator={false}
                                 style={styles.cartSliderContainer}
                             />
-                        ) : (
-                            <Text style={styles.noItemsText}>Корзина пуста</Text>
-                        )}
-
-                        {user?.role === "admin" && (
-                            <TouchableOpacity style={styles.actionItem} onPress={() => navigation.navigate("AdminPanel")}> 
-                                <MaterialCommunityIcons name="view-dashboard-outline" size={20} color="#2E7D32" style={styles.actionIcon} />
-                                <Text style={styles.actionText}>Админ панель</Text>
-                            </TouchableOpacity>
-                        )}
-                    </View>
+                        </View>
+                    )}
 
                     <View style={styles.section}>
                         <Text style={styles.sectionTitle}>Информация</Text>
-
                         <View style={styles.infoItem}>
                             <View style={styles.infoRow}>
-                                <Ionicons name="location-outline" size={20} color="#388E3C" style={styles.infoIcon} />
-                                <Text style={styles.infoLabel}>Адрес доставки:</Text>
-                                <TouchableOpacity onPress={() => setIsEditingAddress(true)}>
-                                    <Ionicons name="pencil-outline" size={18} color="#888" />
-                                </TouchableOpacity>
-                            </View>
-                            {!isEditingAddress ? (
-                                <Text style={styles.infoValue}>{address || "Нажмите, чтобы добавить адрес"}</Text>
-                            ) : (
-                                <>
-                                    <TextInput
-                                        mode="outlined"
-                                        placeholder="Введите адрес"
-                                        value={address}
-                                        onChangeText={setAddress}
-                                        style={styles.input}
-                                    />
-                                    <Button
-                                        mode="contained"
-                                        onPress={saveAddress}
-                                        loading={savingAddress}
-                                        disabled={savingAddress}
-                                        style={styles.saveButton}
+                                <View style={styles.infoIconContainer}>
+                                    <Ionicons name="location-outline" size={24} color="#388E3C" />
+                                </View>
+                                <View style={styles.infoContent}>
+                                    <Text style={styles.infoLabel}>Адрес доставки</Text>
+                                    {!isEditingAddress ? (
+                                        <Text style={styles.infoValue}>{address || "Нажмите, чтобы добавить адрес"}</Text>
+                                    ) : (
+                                        <>
+                                            <TextInput
+                                                mode="outlined"
+                                                placeholder="Введите адрес"
+                                                value={address}
+                                                onChangeText={setAddress}
+                                                style={styles.input}
+                                            />
+                                            <Button
+                                                mode="contained"
+                                                onPress={saveAddress}
+                                                loading={savingAddress}
+                                                disabled={savingAddress}
+                                                style={styles.saveButton}
+                                            >
+                                                Сохранить
+                                            </Button>
+                                        </>
+                                    )}
+                                </View>
+                                {!isEditingAddress && (
+                                    <TouchableOpacity 
+                                        style={styles.editButton}
+                                        onPress={() => setIsEditingAddress(true)}
                                     >
-                                        Сохранить
-                                    </Button>
-                                </>
-                            )}
+                                        <Ionicons name="pencil-outline" size={20} color="#888" />
+                                    </TouchableOpacity>
+                                )}
+                            </View>
                         </View>
 
                         <View style={styles.infoItem}>
                             <View style={styles.infoRow}>
-                                <Ionicons name="call-outline" size={20} color="#388E3C" style={styles.infoIcon} />
-                                <Text style={styles.infoLabel}>Номер телефона:</Text>
-                                <TouchableOpacity onPress={() => setIsEditingPhone(true)}>
-                                    <Ionicons name="pencil-outline" size={18} color="#888" />
-                                </TouchableOpacity>
-                            </View>
-                            {!isEditingPhone ? (
-                                <Text style={styles.infoValue}>{phone || "Нажмите, чтобы добавить номер телефона"}</Text>
-                            ) : (
-                                <>
-                                    <TextInput
-                                        mode="outlined"
-                                        placeholder="Введите номер телефона"
-                                        value={phone}
-                                        onChangeText={setPhone}
-                                        style={styles.input}
-                                        keyboardType="phone-pad"
-                                    />
-                                    <Button
-                                        mode="contained"
-                                        onPress={savePhone}
-                                        loading={savingPhone}
-                                        disabled={savingPhone}
-                                        style={styles.saveButton}
+                                <View style={styles.infoIconContainer}>
+                                    <Ionicons name="call-outline" size={24} color="#388E3C" />
+                                </View>
+                                <View style={styles.infoContent}>
+                                    <Text style={styles.infoLabel}>Номер телефона</Text>
+                                    {!isEditingPhone ? (
+                                        <Text style={styles.infoValue}>{phone || "Нажмите, чтобы добавить номер телефона"}</Text>
+                                    ) : (
+                                        <>
+                                            <TextInput
+                                                mode="outlined"
+                                                placeholder="Введите номер телефона"
+                                                value={phone}
+                                                onChangeText={setPhone}
+                                                style={styles.input}
+                                                keyboardType="phone-pad"
+                                            />
+                                            <Button
+                                                mode="contained"
+                                                onPress={savePhone}
+                                                loading={savingPhone}
+                                                disabled={savingPhone}
+                                                style={styles.saveButton}
+                                            >
+                                                Сохранить
+                                            </Button>
+                                        </>
+                                    )}
+                                </View>
+                                {!isEditingPhone && (
+                                    <TouchableOpacity 
+                                        style={styles.editButton}
+                                        onPress={() => setIsEditingPhone(true)}
                                     >
-                                        Сохранить
-                                    </Button>
-                                </>
-                            )}
+                                        <Ionicons name="pencil-outline" size={20} color="#888" />
+                                    </TouchableOpacity>
+                                )}
+                            </View>
                         </View>
                     </View>
 
-                    <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-                        <Ionicons name="log-out-outline" size={20} color="#fff" style={styles.logoutIcon} />
+                    <TouchableOpacity 
+                        style={styles.logoutButton} 
+                        onPress={handleLogout}
+                    >
+                        <Ionicons name="log-out-outline" size={24} color="#fff" style={styles.logoutIcon} />
                         <Text style={styles.logoutText}>Выйти</Text>
                     </TouchableOpacity>
                 </>
@@ -277,7 +313,10 @@ const ProfileScreen = ({ navigation }) => {
                     >
                         ЗАРЕГИСТРИРОВАТЬСЯ
                     </Button>
-                    <TouchableOpacity style={styles.loginButton} onPress={() => navigation.navigate("Login")}> 
+                    <TouchableOpacity 
+                        style={styles.loginButton} 
+                        onPress={() => navigation.navigate("Login")}
+                    >
                         <Text style={styles.loginText}>Уже есть аккаунт? Войти</Text>
                     </TouchableOpacity>
                 </View>
@@ -286,275 +325,240 @@ const ProfileScreen = ({ navigation }) => {
     );
 };
 
-
-
 const styles = StyleSheet.create({
-  container: {
-      flex: 1,
-      backgroundColor: "#F5F8F5",
-      paddingHorizontal: 20,
-      paddingTop: 20,
-  },
-  header: {
-      flexDirection: 'column',
-      justifyContent: 'center',
-      alignItems: 'center',
-      marginBottom: 20,
-  },
-  profileInfo: {
-      alignItems: "center",
-  },
-  avatarContainer: {
-      width: 80,
-      height: 80,
-      borderRadius: 40,
-      overflow: "hidden",
-      marginBottom: 10,
-      backgroundColor: '#E0E0E0',
-      justifyContent: 'center',
-      alignItems: 'center',
-  },
-  avatar: {
-      width: 80,
-      height: 80,
-  },
-  defaultAvatar: {
-      width: 80,
-      height: 80,
-      borderRadius: 40,
-      backgroundColor: '#4CAF50',
-      justifyContent: 'center',
-      alignItems: 'center',
-  },
-  profileName: {
-      fontSize: 22,
-      fontWeight: "bold",
-      color: "#2E7D32",
-      marginBottom: 5,
-  },
-  profileEmail: {
-      fontSize: 16,
-      color: "#666",
-  },
-  adminIconContainer: {
-      padding: 10,
-  },
-  section: {
-      marginBottom: 20,
-      backgroundColor: "#FFFFFF",
-      borderRadius: 16,
-      padding: 16,
-      elevation: 2,
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.1,
-      shadowRadius: 2,
-  },
-  sectionTitle: {
-      fontSize: 18,
-      fontWeight: "bold",
-      color: "#388E3C",
-      marginBottom: 15,
-  },
-  actionItem: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "space-between",
-      paddingVertical: 12,
-      borderBottomWidth: 1,
-      borderColor: "#eee",
-  },
-  actionIcon: {
-      marginRight: 15,
-  },
-  actionText: {
-      fontSize: 16,
-      color: "#333",
-      flex: 1,
-  },
-  
-
-      cartContainer: {
-          paddingVertical: 15,
-          backgroundColor: '#F9F9F9',
-          borderRadius: 12,
-          marginTop: 10,
-          elevation: 1,
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: 0.5 },
-          shadowOpacity: 0.05,
-          shadowRadius: 1,
-          overflow: 'hidden', // Чтобы borderRadius работал корректно с FlatList
-      },
-      cartButton: {
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
-          paddingHorizontal: 15,
-          paddingVertical: 12,
-      },
-      cartIcon: {
-          marginRight: 12,
-      },
-      cartText: {
-          fontSize: 17,
-          color: "#333",
-          flex: 1,
-      },
-      cartSliderContainer: {
-          paddingLeft: 15,
-          marginTop: 10,
-      },
-      cartItem: {
-          backgroundColor: "#FFFFFF",
-          padding: 12,
-          borderRadius: 10,
-          marginRight: 12,
-          width: 110,
-          height: 130,
-          justifyContent: "space-around",
-          alignItems: "center",
-          elevation: 2,
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: 1 },
-          shadowOpacity: 0.1,
-          shadowRadius: 2,
-          marginBottom:5,
-          marginTop:5,
-      },
-      cartItemImage: {
-          width: 60,
-          height: 60,
-          resizeMode: "contain",
-      },
-      cartItemName: {
-          fontSize: 13,
-          color: "#388E3C",
-          textAlign: "center",
-      },
-      cartItemPrice: {
-          fontSize: 15,
-          fontWeight: "bold",
-          color: "#2E7D32",
-          textAlign: "center",
-      },
-      noItemsText: {
-          fontSize: 16,
-          color: "#777",
-          marginTop: 15,
-          paddingHorizontal: 15,
-          textAlign: 'center',
-      },
-  infoItem: {
-      paddingVertical: 12,
-      borderBottomWidth: 1,
-      borderColor: "#eee",
-  },
-  infoRow: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "space-between",
-      marginBottom: 8,
-  },
-  infoIcon: {
-      marginRight: 15,
-  },
-  infoLabel: {
-      fontSize: 16,
-      fontWeight: "500",
-      color: "#333",
-      flex: 1,
-  },
-  infoValue: {
-      fontSize: 16,
-      color: "#666",
-      marginLeft: 35,
-  },
-  input: {
-      marginTop: 10,
-      backgroundColor: "#FFF",
-  },
-  saveButton: {
-      marginTop: 10,
-  },
-  logoutButton: {
-      backgroundColor: '#D32F2F',
-      paddingVertical: 14,
-      borderRadius: 10,
-      marginTop: 30,
-      alignItems: 'center',
-      justifyContent: 'center',
-      elevation: 3,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.2,
-      shadowRadius: 2,
-      flexDirection: 'row',
-      marginBottom:50,
-  },
-  logoutIcon: {
-      marginRight: 10,
-  },
-  logoutText: {
-      fontSize: 16,
-      fontWeight: "bold",
-      color: "#FFFFFF",
-  },
-  guestContainer: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      padding: 20,
-  },
-  avatarCircle: {
-      backgroundColor: '#E8F5E9',
-      borderRadius: 75,
-      width: 150,
-      height: 150,
-      marginBottom: 30,
-      justifyContent: 'center',
-      alignItems: 'center',
-      elevation: 4,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.15,
-      shadowRadius: 4,
-  },
-  avatar: {
-      width: 100,
-      height: 100,
-      resizeMode: 'contain',
-  },
-  greeting: {
-      fontSize: 20,
-      textAlign: "center",
-      color: "#388E3C",
-      marginBottom: 30,
-  },
-  registerButton: {
-      marginTop: 20,
-      backgroundColor: '#43A047',
-      paddingVertical: 14,
-      borderRadius: 10,
-      alignItems: 'center',
-      elevation: 2,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.15,
-      shadowRadius: 2,
-  },
-  buttonText: {
-      fontSize: 16,
-      fontWeight: "bold",
-      color: '#fff',
-  },
-  loginButton: {
-      marginTop: 20,
-  },
-  loginText: {
-      color: '#388E3C',
-      fontSize: 16,
-  },
+    container: {
+        flex: 1,
+        backgroundColor: "#F5F8F5",
+    },
+    header: {
+        backgroundColor: '#4CAF50',
+        paddingVertical: 30,
+        paddingHorizontal: 20,
+        borderBottomLeftRadius: 30,
+        borderBottomRightRadius: 30,
+        marginBottom: 20,
+    },
+    profileInfo: {
+        alignItems: "center",
+    },
+    avatarContainer: {
+        width: 100,
+        height: 100,
+        borderRadius: 50,
+        backgroundColor: 'rgba(255, 255, 255, 0.2)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 15,
+        overflow: 'hidden',
+    },
+    avatar: {
+        width: 100,
+        height: 100,
+    },
+    defaultAvatar: {
+        width: 100,
+        height: 100,
+        borderRadius: 50,
+        backgroundColor: 'rgba(255, 255, 255, 0.3)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    profileName: {
+        fontSize: 24,
+        fontWeight: "bold",
+        color: "#fff",
+        marginBottom: 5,
+    },
+    profileEmail: {
+        fontSize: 16,
+        color: "rgba(255, 255, 255, 0.8)",
+    },
+    section: {
+        backgroundColor: "#FFFFFF",
+        marginHorizontal: 20,
+        marginBottom: 20,
+        borderRadius: 15,
+        padding: 20,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
+    },
+    sectionTitle: {
+        fontSize: 18,
+        fontWeight: "bold",
+        color: "#388E3C",
+        marginBottom: 15,
+    },
+    actionItem: {
+        flexDirection: "row",
+        alignItems: "center",
+        paddingVertical: 15,
+        borderBottomWidth: 1,
+        borderBottomColor: "#eee",
+    },
+    actionIconContainer: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: 'rgba(56, 142, 60, 0.1)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 15,
+    },
+    actionText: {
+        fontSize: 16,
+        color: "#333",
+        flex: 1,
+    },
+    infoItem: {
+        paddingVertical: 15,
+        borderBottomWidth: 1,
+        borderBottomColor: "#eee",
+    },
+    infoRow: {
+        flexDirection: "row",
+        alignItems: "center",
+    },
+    infoIconContainer: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: 'rgba(56, 142, 60, 0.1)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 15,
+    },
+    infoContent: {
+        flex: 1,
+    },
+    infoLabel: {
+        fontSize: 14,
+        color: "#666",
+        marginBottom: 5,
+    },
+    infoValue: {
+        fontSize: 16,
+        color: "#333",
+    },
+    editButton: {
+        padding: 5,
+    },
+    input: {
+        marginTop: 10,
+        backgroundColor: "#FFF",
+    },
+    saveButton: {
+        marginTop: 10,
+        backgroundColor: "#388E3C",
+    },
+    logoutButton: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: "#D32F2F",
+        margin: 20,
+        padding: 15,
+        borderRadius: 15,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
+    },
+    logoutIcon: {
+        marginRight: 10,
+    },
+    logoutText: {
+        fontSize: 16,
+        fontWeight: "bold",
+        color: "#FFFFFF",
+    },
+    guestContainer: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        padding: 20,
+        marginTop: 50,
+    },
+    avatarCircle: {
+        backgroundColor: "#E8F5E9",
+        borderRadius: 100,
+        width: 200,
+        height: 200,
+        marginBottom: 30,
+        justifyContent: "center",
+        alignItems: "center",
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 4,
+    },
+    greeting: {
+        fontSize: 20,
+        textAlign: "center",
+        color: "#388E3C",
+        marginBottom: 30,
+        lineHeight: 28,
+    },
+    registerButton: {
+        width: "100%",
+        backgroundColor: "#43A047",
+        paddingVertical: 12,
+        borderRadius: 10,
+        marginBottom: 15,
+    },
+    buttonText: {
+        fontSize: 16,
+        fontWeight: "bold",
+        color: "#fff",
+    },
+    loginButton: {
+        marginTop: 10,
+    },
+    loginText: {
+        color: "#388E3C",
+        fontSize: 16,
+    },
+    containerCentered: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: "#F5F8F5",
+    },
+    cartSliderContainer: {
+        marginTop: 10,
+    },
+    cartItem: {
+        width: 150,
+        marginRight: 15,
+        backgroundColor: "#FFFFFF",
+        borderRadius: 10,
+        padding: 10,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
+    },
+    cartItemImage: {
+        width: "100%",
+        height: 100,
+        borderRadius: 5,
+        marginBottom: 10,
+    },
+    cartItemName: {
+        fontSize: 14,
+        color: "#333",
+        marginBottom: 5,
+    },
+    cartItemPrice: {
+        fontSize: 16,
+        fontWeight: "bold",
+        color: "#388E3C",
+    },
 });
 
 export default ProfileScreen;

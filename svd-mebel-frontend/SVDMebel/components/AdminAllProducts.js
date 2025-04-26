@@ -6,11 +6,15 @@ import {
     Image,
     ActivityIndicator,
     StyleSheet,
-    TouchableOpacity
+    TouchableOpacity,
+    Dimensions
 } from 'react-native';
 import axios from 'axios';
 import { useNavigation } from '@react-navigation/native';
-import Icon from 'react-native-vector-icons/FontAwesome'; // Или любая другая библиотека иконок
+import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+
+const { width } = Dimensions.get('window');
 
 const AdminAllProducts = () => {
     const [products, setProducts] = useState([]);
@@ -34,38 +38,49 @@ const AdminAllProducts = () => {
 
     const handleEditProduct = (productId) => {
         navigation.navigate('EditProduct', { productId: productId });
-        console.log(`Редактировать товар с ID: ${productId}`);
     };
 
     const renderItem = ({ item }) => (
         <View style={styles.listItem}>
             <TouchableOpacity
                 onPress={() => navigation.navigate('ProductDetail', { productId: item.id })}
-                activeOpacity={0.9}
+                activeOpacity={0.7}
                 style={styles.productInfo}
             >
-                {item.images?.length > 0 || item.image ? (
-                    <Image
-                        source={{ uri: `http://192.168.92.67:5000${item.image}` }}
-                        style={styles.image}
-                        resizeMode="cover"
-                    />
-                ) : (
-                    <View style={[styles.image, styles.noImage]}>
-                        <Text style={styles.noImageText}>Нет изображения</Text>
-                    </View>
-                )}
+                <View style={styles.imageContainer}>
+                    {item.images?.length > 0 || item.image ? (
+                        <Image
+                            source={{ uri: `http://192.168.92.67:5000${item.image}` }}
+                            style={styles.image}
+                            resizeMode="cover"
+                        />
+                    ) : (
+                        <View style={styles.noImage}>
+                            <Ionicons name="image" size={32} color="#666" />
+                        </View>
+                    )}
+                </View>
                 <View style={styles.textContainer}>
-                    <Text style={styles.name}>{item.name}</Text>
-                    <Text style={styles.price}>{item.price} ₸</Text>
-                    <Text style={styles.description}>{item.description}</Text>
+                    <Text style={styles.name} numberOfLines={1}>{item.name}</Text>
+                    <View style={styles.priceContainer}>
+                        <Text style={styles.price}>{item.price.toLocaleString('ru-RU')} ₽</Text>
+                    </View>
+                    <Text style={styles.description} numberOfLines={2}>{item.description}</Text>
                 </View>
             </TouchableOpacity>
             <TouchableOpacity
                 onPress={() => handleEditProduct(item.id)}
                 style={styles.editButton}
+                activeOpacity={0.7}
             >
-                <Icon name="pencil" size={20} color="#007BFF" />
+                <LinearGradient
+                    colors={['#4CAF50', '#66BB6A']}
+                    style={styles.editButtonGradient}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                >
+                    <Ionicons name="create" size={20} color="#FFF" />
+                </LinearGradient>
             </TouchableOpacity>
         </View>
     );
@@ -85,13 +100,22 @@ const AdminAllProducts = () => {
                 data={products || []}
                 keyExtractor={(item) => item.id.toString()}
                 renderItem={renderItem}
-                contentContainerStyle={{ paddingBottom: 20 }}
+                contentContainerStyle={styles.listContent}
+                showsVerticalScrollIndicator={false}
             />
             <TouchableOpacity
                 style={styles.addButton}
                 onPress={() => navigation.navigate('AddProduct')}
+                activeOpacity={0.7}
             >
-                <Text style={styles.addButtonText}>+</Text>
+                <LinearGradient
+                    colors={['#4CAF50', '#66BB6A']}
+                    style={styles.addButtonGradient}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                >
+                    <Ionicons name="add" size={32} color="#FFF" />
+                </LinearGradient>
             </TouchableOpacity>
         </View>
     );
@@ -100,83 +124,111 @@ const AdminAllProducts = () => {
 const styles = StyleSheet.create({
     mainContainer: {
         flex: 1,
+        backgroundColor: '#F8F9FA',
     },
     container: {
-        backgroundColor: '#F9F9F9',
-        padding: 10
+        flex: 1,
+    },
+    listContent: {
+        padding: 16,
+        paddingBottom: 80,
     },
     loading: {
         flex: 1,
         justifyContent: 'center',
-        alignItems: 'center'
+        alignItems: 'center',
+        backgroundColor: '#F8F9FA',
     },
     listItem: {
         backgroundColor: '#FFFFFF',
-        borderRadius: 10,
-        padding: 15,
-        marginBottom: 15,
-        elevation: 3,
-        flexDirection: 'row', // Располагаем элементы в ряд
-        alignItems: 'center', // Выравниваем по вертикали
-        justifyContent: 'space-between', // Распределяем пространство между элементами
+        borderRadius: 16,
+        padding: 16,
+        marginBottom: 16,
+        flexDirection: 'row',
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+        elevation: 5,
     },
     productInfo: {
-        flex: 1, // Занимает большую часть пространства
+        flex: 1,
         flexDirection: 'row',
         alignItems: 'center',
     },
+    imageContainer: {
+        marginRight: 16,
+    },
     image: {
-        width: 100,
-        height: 100,
-        borderRadius: 10,
-        marginRight: 15
+        width: 80,
+        height: 80,
+        borderRadius: 12,
     },
     noImage: {
-        backgroundColor: '#E0E0E0',
+        width: 80,
+        height: 80,
+        borderRadius: 12,
+        backgroundColor: '#F0F0F0',
         justifyContent: 'center',
         alignItems: 'center',
-        width: 100,
-        height: 100,
-        marginRight: 15
-    },
-    noImageText: {
-        color: '#888'
     },
     textContainer: {
-        flex: 1, // Занимает оставшееся пространство
+        flex: 1,
     },
     name: {
         fontSize: 18,
-        fontWeight: 'bold',
-        marginBottom: 5
+        fontWeight: '600',
+        color: '#333',
+        marginBottom: 8,
+    },
+    priceContainer: {
+        backgroundColor: '#E8F5E9',
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 8,
+        alignSelf: 'flex-start',
+        marginBottom: 8,
     },
     price: {
         fontSize: 16,
+        fontWeight: '600',
         color: '#4CAF50',
-        marginBottom: 3
     },
     description: {
         fontSize: 14,
-        color: '#666'
+        color: '#666',
+        lineHeight: 20,
     },
     editButton: {
-        padding: 10,
+        marginLeft: 12,
+    },
+    editButtonGradient: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     addButton: {
         position: 'absolute',
         right: 20,
         bottom: 20,
-        backgroundColor: '#4CAF50',
-        borderRadius: 30,
         width: 60,
         height: 60,
+        borderRadius: 30,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 8,
+        elevation: 8,
+    },
+    addButtonGradient: {
+        width: '100%',
+        height: '100%',
+        borderRadius: 30,
         justifyContent: 'center',
         alignItems: 'center',
-        elevation: 5,
-    },
-    addButtonText: {
-        color: 'white',
-        fontSize: 30,
     },
 });
 

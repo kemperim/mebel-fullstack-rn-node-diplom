@@ -27,6 +27,7 @@ import  updateOrderStatus  from './components/updateOrderStatus';
 import AdminAllProducts from './components/AdminAllProducts';
 import ImagePickerScreen from './screens/CateGor';
 import EditProduct from './components/EditProduct';
+import ARScene from './screens/ARScene';
 import axios from 'axios';
 
 const Tab = createBottomTabNavigator();
@@ -113,7 +114,7 @@ const App = () => {
         <Stack.Screen name="AdminUsers" component={AdminUsersScreen}  options={{headerShown:true, title:'Все пользователи'}} />
         <Stack.Screen name="AdminOrders" component={AdminOrdersScreen} options={{headerShown:true, title:'Все заказы'}}  />
         <Stack.Screen name="AdminProducts" component={AdminProductsScreen} options={{headerShown:true, title:'Все товары'}}  />
-        <Stack.Screen name="AdminStatistics" component={AdminStatisticsScreen} />
+        <Stack.Screen name="AdminStatistics" component={AdminStatisticsScreen}  options={{headerShown:true, title:'Статистика'}} />
         <Stack.Screen  name="ProductDetail" component={ProductDetailScreen}   options={{headerShown:true, title:'Детали'}} />
         <Stack.Screen  name="AddProduct" component={AddProductScreen}   options={{headerShown:true, title:'Добавить товар'}} />
         <Stack.Screen  name="CheckoutScreen" component={CheckoutScreen}   options={{headerShown:true, title:'Оформление заказа'}} />
@@ -121,7 +122,8 @@ const App = () => {
         <Stack.Screen name="OrderDetails" component={OrderDetailsScreen}  options={{headerShown:true, title:'Детали заказа'}}/>
         <Stack.Screen name="updateOrderStatus" component={updateOrderStatus}  options={{headerShown:true, title:'Детали заказа'}}/>
         <Stack.Screen name="AdminAllProducts" component={AdminAllProducts}  options={{headerShown:true, title:'Все товары'}}/>
-        
+      
+        <Stack.Screen name="ARScene" component={ARScene} />
         <Stack.Screen name="EditProduct" component={EditProduct}  options={{headerShown:true, title:'Редактирование товара'}}/>
         
         <Stack.Screen name="ImagePickerScreen" component={ImagePickerScreen}/>

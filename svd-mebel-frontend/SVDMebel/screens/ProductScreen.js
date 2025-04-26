@@ -114,7 +114,11 @@ const ProductScreen = ({ route, navigation }) => {
             <Ionicons name="star" size={14} color="#AED581" />
             <Text style={styles.productRating}>{item.rating}</Text>
           </View>
-          <Text style={styles.productPrice}>{item.price} руб.</Text>
+          <Text style={styles.productPrice}>
+  {Math.floor(item.price)?.toLocaleString('ru-RU', {
+    maximumFractionDigits: 0,
+  })} ₸
+ </Text>
 
           {isOutOfStock ? (
             <View style={styles.outOfStockContainer}>

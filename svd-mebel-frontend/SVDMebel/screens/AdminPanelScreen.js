@@ -1,8 +1,28 @@
-import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
-import { Ionicons } from "@expo/vector-icons"; // Установи: npm install @expo/vector-icons
+import React, { useEffect, useRef } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  Animated,
+  Dimensions
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+
+const { width } = Dimensions.get('window');
 
 const AdminPanelScreen = ({ navigation }) => {
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 500,
+      useNativeDriver: true,
+    }).start();
+  }, []);
+
   const menuItems = [
     { title: "Пользователи", icon: "people-outline", screen: "AdminUsers" },
     { title: "Заказы", icon: "cart-outline", screen: "AdminOrders" },
@@ -12,18 +32,41 @@ const AdminPanelScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Админ-панель</Text>
-
-      {menuItems.map((item, index) => (
-        <TouchableOpacity 
-          key={index} 
-          style={styles.menuItem} 
-          onPress={() => navigation.navigate(item.screen)}
-        >
-          <Ionicons name={item.icon} size={24} color="#007AFF" style={styles.icon} />
-          <Text style={styles.menuText}>{item.title}</Text>
-        </TouchableOpacity>
-      ))}
+      <ScrollView 
+        style={styles.content}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
+        {menuItems.map((item, index) => (
+          <Animated.View
+            key={index}
+            style={[
+              styles.menuItem,
+              {
+                opacity: fadeAnim,
+                transform: [{
+                  translateY: fadeAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [20, 0]
+                  })
+                }]
+              }
+            ]}
+          >
+            <TouchableOpacity 
+              style={styles.cardTouchable}
+              onPress={() => navigation.navigate(item.screen)}
+              activeOpacity={0.7}
+            >
+              <View style={styles.cardIconContainer}>
+                <Ionicons name={item.icon} size={24} color="#4CAF50" />
+              </View>
+              <Text style={styles.menuText}>{item.title}</Text>
+              <Ionicons name="chevron-forward" size={20} color="#4CAF50" />
+            </TouchableOpacity>
+          </Animated.View>
+        ))}
+      </ScrollView>
     </View>
   );
 };
@@ -31,29 +74,43 @@ const AdminPanelScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFF",
-    padding: 20,
+    backgroundColor: '#f8f9fa',
   },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    textAlign: "center",
-    marginBottom: 20,
+  content: {
+    flex: 1,
+  },
+  scrollContent: {
+    padding: 16,
   },
   menuItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#F5F5F5",
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 10,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  icon: {
-    marginRight: 15,
+  cardTouchable: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+  },
+  cardIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(76, 175, 80, 0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 16,
   },
   menuText: {
-    fontSize: 18,
-    fontWeight: "500",
+    flex: 1,
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#333',
   },
 });
 

@@ -3,6 +3,8 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Image, Scro
 import * as ImagePicker from 'expo-image-picker';
 import axios from 'axios';
 import { useRoute, useNavigation } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const EditProduct = () => {
     const route = useRoute();
@@ -204,14 +206,8 @@ const EditProduct = () => {
 
     return (
         <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
-            <Text style={styles.title}>Редактировать товар</Text>
+         
 
-            {Object.keys(product.attributes).length > 0 && (
-                <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Атрибуты товара</Text>
-                    {renderAttributeInputs()}
-                </View>
-            )}
 
             <View style={styles.section}>
                 <Text style={styles.sectionTitle}>Основная информация</Text>
@@ -222,6 +218,7 @@ const EditProduct = () => {
                         value={product.name}
                         onChangeText={value => handleChange('name', value)}
                         placeholder="Введите название товара"
+                        placeholderTextColor="#999"
                     />
                 </View>
                 <View style={styles.inputContainer}>
@@ -233,6 +230,7 @@ const EditProduct = () => {
                         multiline
                         numberOfLines={4}
                         placeholder="Введите описание товара"
+                        placeholderTextColor="#999"
                     />
                 </View>
                 <View style={styles.inputContainer}>
@@ -243,6 +241,7 @@ const EditProduct = () => {
                         onChangeText={value => handleChange('price', value)}
                         keyboardType="numeric"
                         placeholder="Введите цену"
+                        placeholderTextColor="#999"
                     />
                 </View>
                 <View style={styles.inputContainer}>
@@ -253,27 +252,35 @@ const EditProduct = () => {
                         onChangeText={value => handleChange('stock_quantity', value)}
                         keyboardType="numeric"
                         placeholder="Введите количество"
+                        placeholderTextColor="#999"
                     />
                 </View>
                 {/* Добавьте поле для ar_model_path, если необходимо */}
             </View>
 
+            {Object.keys(product.attributes).length > 0 && (
+                <View style={styles.section}>
+                    <Text style={styles.sectionTitle}>Атрибуты товара</Text>
+                    {renderAttributeInputs()}
+                </View>
+            )}
+
+            
             <View style={styles.section}>
                 <Text style={styles.sectionTitle}>Изображения товара</Text>
                 <Text style={styles.label}>Текущие изображения:</Text>
-                <ScrollView horizontal style={styles.imageScrollView}>
+                <ScrollView horizontal style={styles.imageScrollView} showsHorizontalScrollIndicator={false}>
                     {images.map((image, index) => (
                         <View key={index} style={styles.imageContainer}>
                             <Image
                                 source={{ uri: `http://192.168.92.67:5000${image}` }}
                                 style={styles.image}
                             />
-
                             <TouchableOpacity
                                 style={styles.deleteImageButton}
                                 onPress={() => removeImage(image)}
                             >
-                                <Text style={styles.deleteImageText}>×</Text>
+                                <Ionicons name="close" size={20} color="#FFFFFF" />
                             </TouchableOpacity>
                         </View>
                     ))}
@@ -282,14 +289,23 @@ const EditProduct = () => {
                 <TouchableOpacity
                     style={styles.addImageButton}
                     onPress={handleMultiImagePick}
+                    activeOpacity={0.7}
                 >
-                    <Text style={styles.addImageButtonText}>Добавить изображения</Text>
+                    <LinearGradient
+                        colors={['#4CAF50', '#66BB6A']}
+                        style={styles.addImageButtonGradient}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 0 }}
+                    >
+                        <Ionicons name="add" size={24} color="#FFFFFF" />
+                        <Text style={styles.addImageButtonText}>Добавить изображения</Text>
+                    </LinearGradient>
                 </TouchableOpacity>
 
                 {newImages.length > 0 && (
                     <>
                         <Text style={styles.label}>Новые изображения:</Text>
-                        <ScrollView horizontal style={styles.imageScrollView}>
+                        <ScrollView horizontal style={styles.imageScrollView} showsHorizontalScrollIndicator={false}>
                             {newImages.map((image, index) => (
                                 <Image
                                     key={index}
@@ -305,8 +321,17 @@ const EditProduct = () => {
             <TouchableOpacity
                 style={styles.submitButton}
                 onPress={handleSubmit}
+                activeOpacity={0.7}
             >
-                <Text style={styles.submitButtonText}>Сохранить изменения</Text>
+                <LinearGradient
+                    colors={['#2196F3', '#42A5F5']}
+                    style={styles.submitButtonGradient}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                >
+                    <Ionicons name="save" size={24} color="#FFFFFF" />
+                    <Text style={styles.submitButtonText}>Сохранить изменения</Text>
+                </LinearGradient>
             </TouchableOpacity>
         </ScrollView>
     );
@@ -315,124 +340,144 @@ const EditProduct = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f5f5f5',
+        backgroundColor: '#F8F9FA',
     },
     contentContainer: {
-        padding: 16,
+        padding: 20,
+        paddingBottom: 40,
     },
     loadingContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
+        backgroundColor: '#F8F9FA',
     },
     errorContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
         padding: 20,
+        backgroundColor: '#F8F9FA',
     },
     errorText: {
-        color: 'red',
+        color: '#EF5350',
         fontSize: 16,
         textAlign: 'center',
+        fontWeight: '500',
     },
     title: {
-        fontSize: 22,
-        fontWeight: 'bold',
-        marginBottom: 20,
+        fontSize: 28,
+        fontWeight: '700',
+        marginBottom: 24,
         textAlign: 'center',
         color: '#333',
+        letterSpacing: 0.5,
     },
     section: {
-        marginBottom: 20,
-        backgroundColor: 'white',
-        borderRadius: 10,
-        padding: 15,
+        marginBottom: 24,
+        backgroundColor: '#FFFFFF',
+        borderRadius: 20,
+        padding: 24,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 2,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.08,
+        shadowRadius: 12,
+        elevation: 8,
     },
     sectionTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        marginBottom: 15,
-        color: '#444',
+        fontSize: 20,
+        fontWeight: '600',
+        marginBottom: 20,
+        color: '#333',
+        letterSpacing: 0.3,
     },
     inputContainer: {
-        marginBottom: 15,
+        marginBottom: 20,
     },
     label: {
-        fontSize: 16,
-        marginBottom: 5,
-        color: '#555',
+        fontSize: 15,
+        marginBottom: 8,
+        color: '#666',
+        fontWeight: '500',
+        letterSpacing: 0.2,
     },
     input: {
-        height: 40,
-        borderWidth: 1,
-        borderColor: '#ddd',
-        borderRadius: 8,
-        paddingHorizontal: 10,
-        backgroundColor: '#f9f9f9',
+        height: 52,
+        borderWidth: 1.5,
+        borderColor: '#E0E0E0',
+        borderRadius: 14,
+        paddingHorizontal: 16,
+        backgroundColor: '#FFFFFF',
+        fontSize: 16,
+        color: '#333',
+        fontWeight: '500',
     },
     multilineInput: {
-        height: 100,
+        height: 140,
         textAlignVertical: 'top',
-        paddingTop: 10,
+        paddingTop: 16,
     },
     imageScrollView: {
-        marginVertical: 10,
+        marginVertical: 12,
     },
     imageContainer: {
         position: 'relative',
-        marginRight: 10,
+        marginRight: 16,
     },
     image: {
-        width: 120,
-        height: 120,
-        borderRadius: 8,
+        width: 140,
+        height: 140,
+        borderRadius: 16,
     },
     deleteImageButton: {
         position: 'absolute',
-        top: -5,
-        right: -5,
-        backgroundColor: 'red',
-        width: 24,
-        height: 24,
-        borderRadius: 12,
+        top: -10,
+        right: -10,
+        backgroundColor: '#EF5350',
+        width: 32,
+        height: 32,
+        borderRadius: 16,
         justifyContent: 'center',
         alignItems: 'center',
-    },
-    deleteImageText: {
-        color: 'white',
-        fontSize: 16,
-        fontWeight: 'bold',
-        lineHeight: 20,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+        elevation: 4,
     },
     addImageButton: {
-        backgroundColor: '#4CAF50',
-        padding: 12,
-        borderRadius: 8,
+        marginTop: 16,
+        borderRadius: 14,
+        overflow: 'hidden',
+    },
+    addImageButtonGradient: {
+        padding: 18,
         alignItems: 'center',
-        marginTop: 10,
+        flexDirection: 'row',
+        justifyContent: 'center',
     },
     addImageButtonText: {
-        color: 'white',
+        color: '#FFFFFF',
         fontSize: 16,
-        fontWeight: 'bold',
+        fontWeight: '600',
+        marginLeft: 8,
     },
     submitButton: {
-        backgroundColor: '#2196F3',
-        padding: 15,
-        borderRadius: 8,
+        marginTop: 32,
+        borderRadius: 14,
+        overflow: 'hidden',
+    },
+    submitButtonGradient: {
+        padding: 18,
         alignItems: 'center',
-        marginTop: 20,
+        flexDirection: 'row',
+        justifyContent: 'center',
     },
     submitButtonText: {
-        color: 'white',
+        color: '#FFFFFF',
         fontSize: 18,
-        fontWeight: 'bold',
+        fontWeight: '600',
+        marginLeft: 8,
     },
 });
 

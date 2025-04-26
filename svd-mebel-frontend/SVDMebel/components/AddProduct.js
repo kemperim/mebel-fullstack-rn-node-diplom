@@ -8,10 +8,14 @@ import {
     Alert,
     Image,
     ScrollView,
+    Animated,
+    Dimensions,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import axios from 'axios';
 import { Picker } from '@react-native-picker/picker';
+import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const AddProduct = () => {
     const [product, setProduct] = useState({
@@ -285,38 +289,39 @@ const AddProduct = () => {
         <ScrollView style={styles.container}>
             <Text style={styles.title}>Добавить товар</Text>
 
-            <View style={styles.pickerContainer}>
-                <Text style={styles.label}>Категория:</Text>
-                <Picker
-                    selectedValue={selectedCategory}
-                    style={styles.picker}
-                    onValueChange={handleCategoryChange}
-                >
-                    <Picker.Item label="Выберите категорию" value={null} />
-                    {categories.map((category) => (
-                        <Picker.Item key={category.id} label={category.name} value={category.id} />
-                    ))}
-                </Picker>
+            <View style={styles.section}>
+                <View style={styles.pickerContainer}>
+                    <Text style={styles.label}>Категория:</Text>
+                    <Picker
+                        selectedValue={selectedCategory}
+                        style={styles.picker}
+                        onValueChange={handleCategoryChange}
+                    >
+                        <Picker.Item label="Выберите категорию" value={null} />
+                        {categories.map((category) => (
+                            <Picker.Item key={category.id} label={category.name} value={category.id} />
+                        ))}
+                    </Picker>
+                </View>
+
+                <View style={styles.pickerContainer}>
+                    <Text style={styles.label}>Подкатегория:</Text>
+                    <Picker
+                        selectedValue={product.subcategory_id}
+                        style={styles.picker}
+                        onValueChange={handleSubcategoryChange}
+                        enabled={selectedCategory !== null && subcategories.length > 0}
+                    >
+                        <Picker.Item label="Выберите подкатегорию" value={null} />
+                        {subcategories.map((subcategory) => (
+                            <Picker.Item key={subcategory.id} label={subcategory.name} value={subcategory.id} />
+                        ))}
+                    </Picker>
+                </View>
             </View>
 
-            <View style={styles.pickerContainer}>
-                <Text style={styles.label}>Подкатегория:</Text>
-                <Picker
-                    selectedValue={product.subcategory_id}
-                    style={styles.picker}
-                    onValueChange={handleSubcategoryChange}
-                    enabled={selectedCategory !== null && subcategories.length > 0}
-                >
-                    <Picker.Item label="Выберите подкатегорию" value={null} />
-                    {subcategories.map((subcategory) => (
-                        <Picker.Item key={subcategory.id} label={subcategory.name} value={subcategory.id} />
-                    ))}
-                </Picker>
-            </View>
-
-            {/* Динамические поля для атрибутов подкатегории */}
             {attributes.length > 0 && (
-                <View>
+                <View style={styles.section}>
                     {attributes.map((attribute) => (
                         <View key={attribute.id} style={styles.inputContainer}>
                             <Text style={styles.label}>{attribute.name}:</Text>
@@ -325,79 +330,122 @@ const AddProduct = () => {
                                 value={product.attributes[attribute.name] || ''}
                                 onChangeText={(value) => handleAttributeChange(attribute.name, value)}
                                 placeholder={`Введите ${attribute.name}`}
-                                placeholderTextColor="#a7c957"
+                                placeholderTextColor="#999"
                             />
                         </View>
                     ))}
                 </View>
             )}
 
-            <View style={styles.inputContainer}>
-                <Text style={styles.label}>Название товара:</Text>
-                <TextInput
-                    style={styles.input}
-                    value={product.name}
-                    onChangeText={(value) => handleChange('name', value)}
-                    placeholder="Введите название товара"
-                    placeholderTextColor="#a7c957"
-                />
+            <View style={styles.section}>
+                <View style={styles.inputContainer}>
+                    <Text style={styles.label}>Название товара:</Text>
+                    <TextInput
+                        style={styles.input}
+                        value={product.name}
+                        onChangeText={(value) => handleChange('name', value)}
+                        placeholder="Введите название товара"
+                        placeholderTextColor="#999"
+                    />
+                </View>
+
+                <View style={styles.inputContainer}>
+                    <Text style={styles.label}>Описание:</Text>
+                    <TextInput
+                        style={[styles.input, styles.multilineInput]}
+                        value={product.description}
+                        onChangeText={(value) => handleChange('description', value)}
+                        multiline
+                        numberOfLines={4}
+                        placeholder="Введите описание товара"
+                        placeholderTextColor="#999"
+                    />
+                </View>
+
+                <View style={styles.inputContainer}>
+                    <Text style={styles.label}>Цена:</Text>
+                    <TextInput
+                        style={styles.input}
+                        value={product.price}
+                        onChangeText={(value) => handleChange('price', value)}
+                        keyboardType="numeric"
+                        placeholder="Введите цену товара"
+                        placeholderTextColor="#999"
+                    />
+                </View>
+
+                <View style={styles.inputContainer}>
+                    <Text style={styles.label}>Количество на складе:</Text>
+                    <TextInput
+                        style={styles.input}
+                        value={product.stock_quantity}
+                        onChangeText={(value) => handleChange('stock_quantity', value)}
+                        keyboardType="numeric"
+                        placeholder="Введите количество товара"
+                        placeholderTextColor="#999"
+                    />
+                </View>
             </View>
 
-            <View style={styles.inputContainer}>
-                <Text style={styles.label}>Описание:</Text>
-                <TextInput
-                    style={[styles.input, styles.multilineInput]}
-                    value={product.description}
-                    onChangeText={(value) => handleChange('description', value)}
-                    multiline
-                    numberOfLines={3}
-                    placeholder="Введите описание товара"
-                    placeholderTextColor="#a7c957"
-                />
+            <View style={styles.section}>
+                <TouchableOpacity 
+                    onPress={handleMultiImagePick} 
+                    style={styles.button}
+                    activeOpacity={0.7}
+                >
+                    <LinearGradient
+                        colors={['#4CAF50', '#66BB6A']}
+                        style={styles.buttonGradient}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 0 }}
+                    >
+                        <Ionicons name="images" size={24} color="#FFFFFF" />
+                        <Text style={styles.buttonText}>Выбрать изображения</Text>
+                    </LinearGradient>
+                </TouchableOpacity>
+
+                {images.length > 0 && (
+                    <ScrollView 
+                        horizontal 
+                        style={styles.imagePreviewContainer}
+                        showsHorizontalScrollIndicator={false}
+                    >
+                        {images.map((image, index) => (
+                            <View key={index} style={{ position: 'relative' }}>
+                                <Image
+                                    source={{ uri: image.uri }}
+                                    style={styles.imagePreview}
+                                />
+                                <TouchableOpacity
+                                    style={styles.imageDeleteButton}
+                                    onPress={() => {
+                                        const newImages = [...images];
+                                        newImages.splice(index, 1);
+                                        setImages(newImages);
+                                    }}
+                                >
+                                    <Ionicons name="close" size={20} color="#FFFFFF" />
+                                </TouchableOpacity>
+                            </View>
+                        ))}
+                    </ScrollView>
+                )}
             </View>
 
-            <View style={styles.inputContainer}>
-                <Text style={styles.label}>Цена:</Text>
-                <TextInput
-                    style={styles.input}
-                    value={product.price}
-                    onChangeText={(value) => handleChange('price', value)}
-                    keyboardType="numeric"
-                    placeholder="Введите цену товара"
-                    placeholderTextColor="#a7c957"
-                />
-            </View>
-
-            <View style={styles.inputContainer}>
-                <Text style={styles.label}>Количество на складе:</Text>
-                <TextInput
-                    style={styles.input}
-                    value={product.stock_quantity}
-                    onChangeText={(value) => handleChange('stock_quantity', value)}
-                    keyboardType="numeric"
-                    placeholder="Введите количество товара"
-                    placeholderTextColor="#a7c957"
-                />
-            </View>
-
-            <TouchableOpacity onPress={handleMultiImagePick} style={styles.button}>
-                <Text style={styles.buttonText}>Выбрать изображения</Text>
-            </TouchableOpacity>
-
-            {images.length > 0 && (
-                <ScrollView horizontal style={styles.imagePreviewContainer}>
-                    {images.map((image, index) => (
-                        <Image
-                            key={index}
-                            source={{ uri: image.uri }}
-                            style={styles.imagePreview}
-                        />
-                    ))}
-                </ScrollView>
-            )}
-
-            <TouchableOpacity onPress={handleSubmit} style={styles.button}>
-                <Text style={styles.buttonText}>Добавить товар</Text>
+            <TouchableOpacity 
+                onPress={handleSubmit} 
+                style={styles.button}
+                activeOpacity={0.7}
+            >
+                <LinearGradient
+                    colors={['#2196F3', '#42A5F5']}
+                    style={styles.buttonGradient}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                >
+                    <Ionicons name="add-circle" size={24} color="#FFFFFF" />
+             
+                </LinearGradient>
             </TouchableOpacity>
         </ScrollView>
     );
@@ -406,68 +454,111 @@ const AddProduct = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        padding: 16,
-        backgroundColor: '#fff',
+        padding: 20,
+        backgroundColor: '#F8F9FA',
     },
     title: {
-        fontSize: 24,
-        fontWeight: 'bold',
+        fontSize: 28,
+        fontWeight: '700',
         textAlign: 'center',
+        marginBottom: 24,
+        color: '#333',
+        letterSpacing: 0.5,
+    },
+    section: {
+        backgroundColor: '#FFFFFF',
+        borderRadius: 20,
+        padding: 24,
         marginBottom: 20,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.08,
+        shadowRadius: 12,
+        elevation: 8,
     },
     pickerContainer: {
-        marginBottom: 15,
+        marginBottom: 20,
     },
     label: {
-        fontSize: 16,
-        color: '#555',
+        fontSize: 15,
+        color: '#666',
+        marginBottom: 8,
+        fontWeight: '500',
+        letterSpacing: 0.2,
     },
     picker: {
-        height: 50,
-        borderColor: '#ddd',
-        borderWidth: 1,
-        borderRadius: 8,
-        backgroundColor: '#f9f9f9',
+        height: 52,
+        borderColor: '#E0E0E0',
+        borderWidth: 1.5,
+        borderRadius: 14,
+        backgroundColor: '#FFFFFF',
         marginVertical: 5,
     },
     inputContainer: {
-        marginBottom: 15,
+        marginBottom: 20,
     },
     input: {
-        height: 40,
-        borderColor: '#ddd',
-        borderWidth: 1,
-        borderRadius: 8,
-        paddingHorizontal: 10,
-        backgroundColor: '#f9f9f9',
+        height: 52,
+        borderColor: '#E0E0E0',
+        borderWidth: 1.5,
+        borderRadius: 14,
+        paddingHorizontal: 16,
+        backgroundColor: '#FFFFFF',
+        fontSize: 16,
+        color: '#333',
+        fontWeight: '500',
     },
     multilineInput: {
-        height: 80,
+        height: 140,
+        textAlignVertical: 'top',
+        paddingTop: 16,
     },
     button: {
-        backgroundColor: '#4CAF50',
-        padding: 15,
-        borderRadius: 8,
+        borderRadius: 14,
+        overflow: 'hidden',
         marginVertical: 10,
+    },
+    buttonGradient: {
+        padding: 18,
         alignItems: 'center',
+        flexDirection: 'row',
+        justifyContent: 'center',
+        marginBottom:20,
     },
     buttonText: {
-        color: '#fff',
-        fontSize: 18,
-        fontWeight: 'bold',
+        color: '#FFFFFF',
+        fontSize: 16,
+        fontWeight: '600',
+        marginLeft: 8,
     },
     imagePreviewContainer: {
-        marginVertical: 10,
-        paddingVertical: 5,
+        marginVertical: 16,
+        paddingVertical: 8,
         flexDirection: 'row',
     },
     imagePreview: {
-        width: 100,
-        height: 100,
-        borderRadius: 8,
-        marginRight: 10,
-        borderWidth: 1,
-        borderColor: '#ccc',
+        width: 140,
+        height: 140,
+        borderRadius: 16,
+        marginRight: 16,
+        borderWidth: 1.5,
+        borderColor: '#E0E0E0',
+    },
+    imageDeleteButton: {
+        position: 'absolute',
+        top: -10,
+        right: -10,
+        backgroundColor: '#EF5350',
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        justifyContent: 'center',
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+        elevation: 4,
     },
 });
 

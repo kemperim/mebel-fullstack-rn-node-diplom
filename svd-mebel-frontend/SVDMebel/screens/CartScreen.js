@@ -6,12 +6,16 @@ import {
   TouchableOpacity,
   StyleSheet,
   Image,
-  ActivityIndicator, // Импортируем ActivityIndicator
+  ActivityIndicator,
+  Animated,
+  Dimensions,
 } from 'react-native';
 import axios from 'axios';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const { width } = Dimensions.get('window');
 
 const CartScreen = ({ navigation }) => {
   const [cartItems, setCartItems] = useState([]);
@@ -121,47 +125,55 @@ const CartScreen = ({ navigation }) => {
   };
 
   const renderItem = ({ item }) => {
-    const isOutOfStock = item.Product.stock_quantity === 0; // Проверяем stock_quantity
+    const isOutOfStock = item.Product.stock_quantity === 0;
 
     return (
-      <View style={styles.cartItem}>
-        <Image source={{ uri:  `http://192.168.92.67:5000${item.Product.image}` }} style={styles.productImage} />
+      <Animated.View style={styles.cartItem}>
+        <View style={styles.imageContainer}>
+          <Image 
+            source={{ uri: `http://192.168.92.67:5000${item.Product.image}` }} 
+            style={styles.productImage} 
+          />
+          {isOutOfStock && (
+            <View style={styles.outOfStockBadge}>
+              <Text style={styles.outOfStockText}>Нет в наличии</Text>
+            </View>
+          )}
+        </View>
         <View style={styles.productInfo}>
           <View style={styles.productHeader}>
             <Text style={styles.productName} numberOfLines={2}>{item.Product.name}</Text>
             <Text style={styles.productPrice}>{item.Product.price} ₽</Text>
           </View>
-          {isOutOfStock ? (
-            <View style={styles.outOfStockContainer}>
-              <Text style={styles.outOfStockText}>Нет в наличии</Text>
-            </View>
-          ) : (
+          {!isOutOfStock && (
             <View style={styles.controlsRow}>
               <View style={styles.quantityContainer}>
                 <TouchableOpacity
                   style={styles.quantityButton}
                   onPress={() => updateQuantity(item.id, item.quantity - 1)}
                 >
-                  <Text style={styles.quantityText}>−</Text>
+                  <Ionicons name="remove" size={20} color="#4CAF50" />
                 </TouchableOpacity>
-                <Text style={styles.productQuantity}>{item.quantity}</Text>
+                <View style={styles.quantityDisplay}>
+                  <Text style={styles.productQuantity}>{item.quantity}</Text>
+                </View>
                 <TouchableOpacity
                   style={styles.quantityButton}
                   onPress={() => updateQuantity(item.id, item.quantity + 1)}
                 >
-                  <Text style={styles.quantityText}>+</Text>
+                  <Ionicons name="add" size={20} color="#4CAF50" />
                 </TouchableOpacity>
               </View>
               <TouchableOpacity
                 style={styles.removeButton}
                 onPress={() => removeItem(item.id)}
               >
-                <Ionicons name="trash-outline" size={22} color="#fff" />
+                <Ionicons name="trash-outline" size={20} color="#fff" />
               </TouchableOpacity>
             </View>
           )}
         </View>
-      </View>
+      </Animated.View>
     );
   };
 
@@ -174,8 +186,9 @@ const CartScreen = ({ navigation }) => {
   console.log('Состояние isLoading перед рендером:', isLoading);
   if (isLoading) {
     return (
-      <View style={styles.container}>
-        <ActivityIndicator size="large" color="#3C8D5B" />
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#4CAF50" />
+        <Text style={styles.loadingText}>Загрузка корзины...</Text>
       </View>
     );
   }
@@ -183,14 +196,18 @@ const CartScreen = ({ navigation }) => {
   console.log('Состояние isAuthenticated перед рендером:', isAuthenticated);
   if (!isAuthenticated) {
     return (
-      <View style={styles.container}>
-        <Text style={styles.emptyCartText}>Пожалуйста, авторизуйтесь для доступа к корзине.</Text>
-        <TouchableOpacity
-          style={styles.authButton}
-          onPress={() => navigation.navigate('Login')}
-        >
-          <Text style={styles.authButtonText}>Перейти к авторизации</Text>
-        </TouchableOpacity>
+      <View style={styles.authContainer}>
+        <View style={styles.authContent}>
+          <Ionicons name="cart-outline" size={64} color="#4CAF50" />
+          <Text style={styles.authTitle}>Корзина недоступна</Text>
+          <Text style={styles.authText}>Пожалуйста, авторизуйтесь для доступа к корзине</Text>
+          <TouchableOpacity
+            style={styles.authButton}
+            onPress={() => navigation.navigate('Login')}
+          >
+            <Text style={styles.authButtonText}>Войти</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     );
   }
@@ -198,28 +215,40 @@ const CartScreen = ({ navigation }) => {
   return (
     <View style={styles.container}>
       {cartItems.length === 0 ? (
-        <Text style={styles.emptyCartText}>Корзина пуста</Text>
-      ) : (
-        <FlatList
-          data={cartItems}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={renderItem}
-          showsVerticalScrollIndicator={false}
-        />
-      )}
-
-      {cartItems.length > 0 && (
-        <View style={styles.footer}>
-          <View style={styles.totalContainer}>
-            <Text style={styles.totalText}>Итого: {total} ₽</Text>
-          </View>
+        <View style={styles.emptyContainer}>
+          <Ionicons name="cart-outline" size={64} color="#4CAF50" />
+          <Text style={styles.emptyTitle}>Корзина пуста</Text>
+          <Text style={styles.emptyText}>Добавьте товары в корзину</Text>
           <TouchableOpacity
-            style={styles.checkoutButton}
-            onPress={() => navigation.navigate('CheckoutScreen')}
+            style={styles.shopButton}
+            onPress={() => navigation.navigate('Каталог')}
           >
-            <Text style={styles.checkoutButtonText}>Перейти к оформлению</Text>
+            <Text style={styles.shopButtonText}>Перейти в каталог</Text>
           </TouchableOpacity>
         </View>
+      ) : (
+        <>
+          <FlatList
+            data={cartItems}
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={renderItem}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.listContent}
+          />
+          <View style={styles.footer}>
+            <View style={styles.totalContainer}>
+              <Text style={styles.totalLabel}>Итого:</Text>
+              <Text style={styles.totalAmount}>{total} ₽</Text>
+            </View>
+            <TouchableOpacity
+              style={styles.checkoutButton}
+              onPress={() => navigation.navigate('CheckoutScreen')}
+            >
+              <Ionicons name="arrow-forward" size={24} color="#fff" style={styles.checkoutIcon} />
+              <Text style={styles.checkoutButtonText}>Оформить заказ</Text>
+            </TouchableOpacity>
+          </View>
+        </>
       )}
     </View>
   );
@@ -228,143 +257,215 @@ const CartScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#f8f9fa',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f8f9fa',
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#666',
+  },
+  authContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f8f9fa',
+    padding: 20,
+  },
+  authContent: {
+    alignItems: 'center',
+    padding: 20,
+  },
+  authTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#333',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  authText: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 24,
+  },
+  authButton: {
+    backgroundColor: '#4CAF50',
+    paddingHorizontal: 32,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  authButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  emptyTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#333',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: '#666',
+    marginBottom: 24,
+  },
+  shopButton: {
+    backgroundColor: '#4CAF50',
+    paddingHorizontal: 32,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  shopButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  listContent: {
     padding: 16,
-    backgroundColor: '#F0F5F0',
-    justifyContent: 'space-between',
   },
   cartItem: {
     flexDirection: 'row',
     backgroundColor: '#ffffff',
     borderRadius: 16,
     marginBottom: 16,
-    padding: 12,
+    padding: 16,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
     shadowRadius: 8,
-    elevation: 2,
+    elevation: 4,
+  },
+  imageContainer: {
+    position: 'relative',
+    marginRight: 16,
   },
   productImage: {
     width: 100,
     height: 100,
     borderRadius: 12,
-    marginRight: 12,
+  },
+  outOfStockBadge: {
+    position: 'absolute',
+    top: 8,
+    left: 8,
+    backgroundColor: 'rgba(255, 0, 0, 0.8)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+  },
+  outOfStockText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
   },
   productInfo: {
     flex: 1,
     justifyContent: 'space-between',
   },
   productHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    marginBottom: 12,
   },
   productName: {
     fontSize: 16,
     fontWeight: '600',
-    color: 'black',
-    flexShrink: 1,
-    maxWidth: '70%',
+    color: '#333',
+    marginBottom: 8,
   },
   productPrice: {
     fontSize: 18,
-    color: '#3C8D5B',
     fontWeight: '700',
+    color: '#4CAF50',
   },
   controlsRow: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    marginTop: 12,
+    alignItems: 'center',
   },
   quantityContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#E6F2E6',
+    backgroundColor: 'rgba(76, 175, 80, 0.1)',
     borderRadius: 8,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    padding: 4,
   },
   quantityButton: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    backgroundColor: '#3C8D5B',
-    borderRadius: 6,
+    width: 32,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  quantityText: {
-    fontSize: 18,
-    color: '#fff',
-    fontWeight: '600',
+  quantityDisplay: {
+    width: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   productQuantity: {
-    marginHorizontal: 12,
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
-    color: '#2F4F2F',
+    color: '#333',
   },
   removeButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    backgroundColor: 'red',
-    borderRadius: 8,
+    backgroundColor: '#FF5252',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   footer: {
-    paddingBottom: 16,
-    paddingHorizontal: 16,
+    backgroundColor: '#ffffff',
+    padding: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#e0e0e0',
   },
   totalContainer: {
-    marginTop: 20,
-    paddingVertical: 12,
-    backgroundColor: '#E1F0E1',
-    borderRadius: 12,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: 16,
   },
-  totalText: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#2E8B57',
+  totalLabel: {
+    fontSize: 18,
+    color: '#666',
+  },
+  totalAmount: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#4CAF50',
   },
   checkoutButton: {
-    backgroundColor: '#3C8D5B',
-    paddingVertical: 14,
-    borderRadius: 12,
-    marginTop: 20,
+    backgroundColor: '#4CAF50',
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16,
+    borderRadius: 8,
+    shadowColor: '#4CAF50',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  checkoutIcon: {
+    marginRight: 8,
   },
   checkoutButtonText: {
     color: '#fff',
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  emptyCartText: {
-    fontSize: 18,
-    color: 'gray',
-    textAlign: 'center',
-    marginTop: 40,
-  },
-  authButton: {
-    backgroundColor: '#3C8D5B',
-    paddingVertical: 14,
-    borderRadius: 12,
-    marginTop: 20,
-    alignItems: 'center',
-  },
-  authButtonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  outOfStockContainer: {
-    backgroundColor: '#FFCDD2', // Светло-красный цвет для фона
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 6,
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  outOfStockText: {
-    color: '#D32F2F', // Темно-красный цвет для текста
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '600',
   },
 });
