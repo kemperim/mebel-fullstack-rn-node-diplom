@@ -10,7 +10,7 @@ const Register = ({ navigation }) => {
 
   const handleRegister = async () => {
     try {
-      const response = await axios.post("http://192.168.92.67:5000/auth/register", {
+      const response = await axios.post("http://192.168.93.67:5000/auth/register", {
         name,
         email,
         password,

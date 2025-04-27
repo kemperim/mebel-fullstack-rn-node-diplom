@@ -39,7 +39,7 @@ const AddProduct = () => {
         const fetchCategories = async () => {
             try {
                 console.log('Начинаем загрузку категорий...');
-                const response = await axios.get('http://192.168.92.67:5000/category');
+                const response = await axios.get('http://192.168.93.67:5000/category');
                 console.log('Категории загружены:', response.data);
                 setCategories(response.data);
             } catch (error) {
@@ -55,7 +55,7 @@ const AddProduct = () => {
             if (categoryId) {
                 try {
                     console.log('Начинаем загрузку подкатегорий для категории:', categoryId);
-                    const response = await axios.get(`http://192.168.92.67:5000/subcategory/${categoryId}/subcategories`);
+                    const response = await axios.get(`http://192.168.93.67:5000/subcategory/${categoryId}/subcategories`);
                     console.log('Подкатегории загружены:', response.data);
                     setSubcategories(response.data);
                     setProduct(prev => ({ ...prev, subcategory_id: null })); // Сбрасываем подкатегорию при смене категории
@@ -79,7 +79,7 @@ const AddProduct = () => {
             if (subcategoryId) {
                 try {
                     console.log('Начинаем загрузку атрибутов для подкатегории:', subcategoryId);
-                    const response = await axios.get(`http://192.168.92.67:5000/products/attributes/subcategory/${subcategoryId}`);
+                    const response = await axios.get(`http://192.168.93.67:5000/products/attributes/subcategory/${subcategoryId}`);
                     console.log('Атрибуты загружены:', response.data);
                     setAttributes(response.data);
                     // Сбрасываем значения атрибутов при смене подкатегории
@@ -255,7 +255,7 @@ const AddProduct = () => {
             console.log('Атрибуты:', attributesData);
             console.log('Количество изображений:', images.length);
     
-            const response = await axios.post('http://192.168.92.67:5000/products/add', formData, {
+            const response = await axios.post('http://192.168.93.67:5000/products/add', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 },

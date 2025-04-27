@@ -46,7 +46,7 @@ const CheckoutScreen = ({ navigation }) => {
   const fetchUserData = async (token) => {
     console.log('CheckoutScreen: fetchUserData вызван');
     try {
-      const response = await axios.get("http://192.168.92.67:5000/auth/me", {
+      const response = await axios.get("http://192.168.93.67:5000/auth/me", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setUser(response.data);
@@ -71,7 +71,7 @@ const CheckoutScreen = ({ navigation }) => {
         return;
       }
 
-      const response = await axios.get(`http://192.168.92.67:5000/cart/${currentUserId}`, {
+      const response = await axios.get(`http://192.168.93.67:5000/cart/${currentUserId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setCartItems(response.data || []);
@@ -93,7 +93,7 @@ const CheckoutScreen = ({ navigation }) => {
   const removeItem = async (itemId) => {
     try {
       const token = await AsyncStorage.getItem('token');
-      await axios.delete(`http://192.168.92.67:5000/cart/remove/${itemId}`, {
+      await axios.delete(`http://192.168.93.67:5000/cart/remove/${itemId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (userId) {
@@ -129,7 +129,7 @@ const CheckoutScreen = ({ navigation }) => {
         console.log('CheckoutScreen: Общая стоимость:', totalPrice);
         console.log('CheckoutScreen: Данные корзины для заказа:', cartItems); // Проверка структуры cartItems
 
-        await axios.post('http://192.168.92.67:5000/orders/create', {
+        await axios.post('http://192.168.93.67:5000/orders/create', {
           user_id: userId, // Убедитесь, что на сервере вы получаете user_id из req.user
           total_price: totalPrice,
           address: address,

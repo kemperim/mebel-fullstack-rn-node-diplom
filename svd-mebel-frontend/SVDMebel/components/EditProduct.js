@@ -32,7 +32,7 @@ const EditProduct = () => {
                 setLoading(true);
                 setError(null);
 
-                const productResponse = await axios.get(`http://192.168.92.67:5000/products/product/${productId}`);
+                const productResponse = await axios.get(`http://192.168.93.67:5000/products/product/${productId}`);
                 const productData = productResponse.data;
                 console.log('Полученные данные продукта:', productData);
                 console.log('Изображения:', productData.images);
@@ -158,7 +158,7 @@ const EditProduct = () => {
         }
     
         try {
-            const response = await axios.put(`http://192.168.92.67:5000/products/edit/${productId}`, formData, {
+            const response = await axios.put(`http://192.168.93.67:5000/products/edit/${productId}`, formData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
             });
     
@@ -273,7 +273,7 @@ const EditProduct = () => {
                     {images.map((image, index) => (
                         <View key={index} style={styles.imageContainer}>
                             <Image
-                                source={{ uri: `http://192.168.92.67:5000${image}` }}
+                                source={{ uri: `http://192.168.93.67:5000${image}` }}
                                 style={styles.image}
                             />
                             <TouchableOpacity
