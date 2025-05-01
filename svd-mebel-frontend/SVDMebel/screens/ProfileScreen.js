@@ -176,7 +176,7 @@ const ProfileScreen = ({ navigation }) => {
                         </TouchableOpacity>
                         <TouchableOpacity 
                                 style={styles.actionItem} 
-                                onPress={() => navigation.navigate("WebViewScreen")}
+                                onPress={() => navigation.navigate("rrrr")}
                             >
                                 <View style={styles.actionIconContainer}>
                                     <MaterialCommunityIcons name="view-dashboard-outline" size={24} color="#2E7D32" />
