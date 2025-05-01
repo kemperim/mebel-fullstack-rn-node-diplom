@@ -27,7 +27,9 @@ import  updateOrderStatus  from './components/updateOrderStatus';
 import AdminAllProducts from './components/AdminAllProducts';
 import ImagePickerScreen from './screens/CateGor';
 import EditProduct from './components/EditProduct';
+import ARViewScreen from './screens/TestViewScreen';
 import ARScene from './screens/ARScene';
+import WebViewScreen from './screens/WebViewScreen'
 import axios from 'axios';
 
 const Tab = createBottomTabNavigator();
@@ -122,9 +124,12 @@ const App = () => {
         <Stack.Screen name="OrderDetails" component={OrderDetailsScreen}  options={{headerShown:true, title:'Детали заказа'}}/>
         <Stack.Screen name="updateOrderStatus" component={updateOrderStatus}  options={{headerShown:true, title:'Детали заказа'}}/>
         <Stack.Screen name="AdminAllProducts" component={AdminAllProducts}  options={{headerShown:true, title:'Все товары'}}/>
-      
+              <Stack.Screen name="ARViewScreen" component={ARViewScreen}  options={{headerShown:true, title:'Все товары'}}/>
+              
+              <Stack.Screen name="WebViewScreen" component={WebViewScreen}  options={{headerShown:true, title:'Все товары'}}/>
         <Stack.Screen name="ARScene" component={ARScene} />
         <Stack.Screen name="EditProduct" component={EditProduct}  options={{headerShown:true, title:'Редактирование товара'}}/>
+
         
         <Stack.Screen name="ImagePickerScreen" component={ImagePickerScreen}/>
         

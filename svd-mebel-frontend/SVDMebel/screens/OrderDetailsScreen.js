@@ -15,7 +15,7 @@ const OrderDetailsScreen = ({ route }) => {
     const fetchOrderDetails = async () => {
       try {
         const token = await AsyncStorage.getItem('token');
-        const response = await axios.get(`http://192.168.93.67:5000/orders/order/${orderId}`, {
+        const response = await axios.get(`http://192.168.143.67:5000/orders/order/${orderId}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },

@@ -19,10 +19,30 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "permissions": ["CAMERA"],
+      "package": "com.leontyev_15kz.SVDMebel"
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "expo-camera": {
+      "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera for AR features."
+    },
+    "extra": {
+      "eas": {
+        "projectId": "73eb022a-701e-4174-9fe2-f4fb76b1ad5e"
+      }
+    },
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera",
+          "microphonePermission": "Allow $(PRODUCT_NAME) to access your microphone",
+          "recordAudioAndroid": true
+        }
+      ]
+    ]
   }
 }
