@@ -34,7 +34,7 @@ const AdminOrdersScreen = ({ navigation }) => {
     setError(null);
     try {
       const token = await AsyncStorage.getItem('token');
-      const response = await axios.get('http://192.168.143.67:5000/admin/admin/orders', {
+      const response = await axios.get('http://192.168.66.67:5000/admin/admin/orders', {
         headers: { Authorization: `Bearer ${token}` },
       });
       setOrders(response.data.orders);

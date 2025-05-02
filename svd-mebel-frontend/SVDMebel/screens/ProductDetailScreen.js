@@ -154,7 +154,7 @@ const ProductDetailScreen = ({ route }) => {
       ]}
     >
       <Image
-        source={{  uri: `http://192.168.143.67:5000${item}`}}
+        source={{  uri: `http://192.168.66.67:5000${item}`}}
         style={styles.thumbnail}
         resizeMode="cover"
       />
