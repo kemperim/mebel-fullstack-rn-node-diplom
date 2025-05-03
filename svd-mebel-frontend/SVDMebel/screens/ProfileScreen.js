@@ -9,6 +9,7 @@ import {
     ScrollView,
     Alert,
     FlatList,
+    Linking,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
@@ -27,12 +28,32 @@ const ProfileScreen = ({ navigation }) => {
     const [isEditingPhone, setIsEditingPhone] = useState(false);
     const [cartItems, setCartItems] = useState([]);
 
+    const arPageURL = 'http://192.168.230.67:5000/web/ar.html';
+
+    const handleOpenAR = useCallback(() => {
+      Linking.canOpenURL(arPageURL)
+        .then((supported) => {
+          if (supported) {
+            Linking.openURL(arPageURL);
+          } else {
+            Alert.alert(
+              'Ошибка',
+              `Невозможно открыть URL: ${arPageURL}. Убедитесь, что URL корректный и сервер доступен.`,
+              [{ text: 'OK' }]
+            );
+          }
+        })
+        .catch((err) => console.error('Произошла ошибка при проверке URL', err));
+    }, [arPageURL]);
+
+
+
     const fetchUserData = useCallback(async () => {
         setLoading(true);
         try {
             const token = await AsyncStorage.getItem("token");
             if (token) {
-                const response = await axios.get("http://192.168.66.67:5000/auth/me", {
+                const response = await axios.get("http://192.168.230.67:5000/auth/me", {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 setUser(response.data);
@@ -40,7 +61,7 @@ const ProfileScreen = ({ navigation }) => {
                 setPhone(response.data.phone || "");
 
                 const userId = response.data.id;
-                const cartResponse = await axios.get(`http://192.168.66.67:5000/cart/${userId}`, {
+                const cartResponse = await axios.get(`http://192.168.230.67:5000/cart/${userId}`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 const cartItemsData = cartResponse.data.map(item => item.Product);
@@ -66,6 +87,8 @@ const ProfileScreen = ({ navigation }) => {
         }, [fetchUserData])
     );
 
+  
+
     const handleLogout = async () => {
         await AsyncStorage.removeItem("token");
         setUser(null);
@@ -77,7 +100,7 @@ const ProfileScreen = ({ navigation }) => {
         try {
             const token = await AsyncStorage.getItem("token");
             await axios.put(
-                "http://192.168.66.67:5000/user/profile/address",
+                "http://192.168.230.67:5000/user/profile/address",
                 { address },
                 {
                     headers: { Authorization: `Bearer ${token}` },
@@ -97,7 +120,7 @@ const ProfileScreen = ({ navigation }) => {
         try {
             const token = await AsyncStorage.getItem("token");
             await axios.put(
-                "http://192.168.66.67:5000/user/profile/phone",
+                "http://192.168.230.67:5000/user/profile/phone",
                 { phone },
                 {
                     headers: { Authorization: `Bearer ${token}` },
@@ -176,7 +199,7 @@ const ProfileScreen = ({ navigation }) => {
                         </TouchableOpacity>
                         <TouchableOpacity 
                                 style={styles.actionItem} 
-                                onPress={() => navigation.navigate("rrrr")}
+                                onPress={(handleOpenAR)}
                             >
                                 <View style={styles.actionIconContainer}>
                                     <MaterialCommunityIcons name="view-dashboard-outline" size={24} color="#2E7D32" />

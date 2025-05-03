@@ -18,7 +18,10 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#ffffff",
+        "enableProguardInReleaseBuilds": true,
+        "enableShrinkResources": true,
+        "enableR8": true
       },
       "permissions": ["CAMERA"],
       "package": "com.leontyev_15kz.SVDMebel"

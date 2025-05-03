@@ -7,7 +7,7 @@ const CatalogScreen = () => {
   const [loading, setLoading] = useState(true); // Индикатор загрузки
 
   useEffect(() => {
-    axios.get('http://192.168.66.67:5000/products/') // Обрати внимание на порт
+    axios.get('http://192.168.230.67:5000/products/') // Обрати внимание на порт
       .then(response => {
         setProducts(response.data); // Сохраняем данные
         setLoading(false);

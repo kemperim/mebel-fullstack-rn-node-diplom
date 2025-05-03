@@ -11,7 +11,7 @@ const SubcategoryScreen = ({ route, navigation }) => {
   useEffect(() => {
     const fetchSubcategories = async () => {
       try {
-        const res = await axios.get(`http://192.168.66.67:5000/subcategory/`);
+        const res = await axios.get(`http://192.168.230.67:5000/subcategory/`);
         const filteredSubcategories = res.data.filter(sub => sub.category_id === categoryId);
         setSubcategories(filteredSubcategories);
       } catch (err) {

@@ -30,7 +30,7 @@ const ProductScreen = ({ route, navigation }) => {
 
     const fetchProducts = async () => {
       try {
-        const res = await axios.get(`http://192.168.143.67:5000/products/products/${subcategoryId}`);
+        const res = await axios.get(`http://192.168.230.67:5000/products/products/${subcategoryId}`);
         setProducts(res.data);
       } catch (err) {
         console.error('Ошибка загрузки товаров:', err);
@@ -51,7 +51,7 @@ const ProductScreen = ({ route, navigation }) => {
   const fetchCartItems = async (userId, token) => {
     setIsCheckingCart(true);
     try {
-      const res = await axios.get(`http://192.168.66.67:5000/cart/${userId}`, {
+      const res = await axios.get(`http://192.168.230.67:5000/cart/${userId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setCartItemsFromServer(res.data.map(item => item.product_id)); // Сохраняем только ID товаров
@@ -79,7 +79,7 @@ const ProductScreen = ({ route, navigation }) => {
 
     try {
       const res = await axios.post(
-        'http://192.168.66.67:5000/cart/add',
+        'http://192.168.230.67:5000/cart/add',
         { productId: product.id, quantity: 1 },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -106,7 +106,7 @@ const ProductScreen = ({ route, navigation }) => {
         onPress={() => navigation.navigate('ProductDetail', { productId: item.id })}
         activeOpacity={0.9}
       >
-        <Image source={{ uri: `http://192.168.66.67:5000${item.image}` }} style={styles.productImage} />
+        <Image source={{ uri: `http://192.168.230.67:5000${item.image}` }} style={styles.productImage} />
         <View style={styles.productDetails}>
           <Text style={styles.productName}>{item.name}</Text>
           <View style={styles.rating}>
