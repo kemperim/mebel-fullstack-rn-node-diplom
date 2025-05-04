@@ -28,7 +28,7 @@ const ProfileScreen = ({ navigation }) => {
     const [isEditingPhone, setIsEditingPhone] = useState(false);
     const [cartItems, setCartItems] = useState([]);
 
-    const arPageURL = 'http://192.168.230.67:5000/web/ar.html';
+    const arPageURL = 'https://192.168.230.67:443/web/ar.html';
 
     const handleOpenAR = useCallback(() => {
       Linking.canOpenURL(arPageURL)
@@ -140,7 +140,7 @@ const ProfileScreen = ({ navigation }) => {
             style={styles.cartItem}
             onPress={() => navigation.navigate("ProductDetail", { productId: item.id })}
         >
-            <Image source={{ uri: `http://192.168.66.67:5000${item.image}`  }} style={styles.cartItemImage} />
+            <Image source={{ uri: `http://192.168.230.67:5000${item.image}`  }} style={styles.cartItemImage} />
             <Text style={styles.cartItemName}>{item.name}</Text>
             <Text style={styles.cartItemPrice}>{item.price}</Text>
         </TouchableOpacity>
@@ -197,7 +197,7 @@ const ProfileScreen = ({ navigation }) => {
                             <Text style={styles.actionText}>Корзина</Text>
                             <Ionicons name="chevron-forward-outline" size={20} color="#888" />
                         </TouchableOpacity>
-                        <TouchableOpacity 
+                        <TouchableOpacity WebPageScreen
                                 style={styles.actionItem} 
                                 onPress={(handleOpenAR)}
                             >

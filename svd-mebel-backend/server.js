@@ -1,7 +1,7 @@
 require('dotenv').config();
 
 if (!process.env.JWT_SECRET) {
-    console.warn("⚠️ JWT_SECRET не найден в переменных окружения (.env)! Используется небезопассное значение по умолчанию.");
+    console.warn("⚠️ JWT_SECRET не найден в переменных окружения (.env)! Используется небезопасное значение по умолчанию.");
     process.env.JWT_SECRET = 'your_secret_key_unsafe_for_production';
 }
 
@@ -9,8 +9,10 @@ const models = require('./models');
 const sequelize = require("./config/db");
 const express = require('express');
 const cors = require('cors');
-const http = require('http');
+const fs = require('fs');
 const path = require('path');
+const http = require('http');
+const https = require('https');
 
 const authRoutes = require('./routes/authRoutes');
 const productRoutes = require('./routes/productRoutes');
@@ -24,7 +26,7 @@ const orderRouter = require('./routes/orderRoutes');
 const uploadRouter = require('./routes/uploadsRoutes');
 
 // Синхронизация с базой данных
-sequelize.sync().then(() => console.log("✅ Таблица пользователей обновлена"));
+sequelize.sync().then(() => console.log("✅ Таблицы синхронизированы с базой данных"));
 
 const app = express();
 
@@ -45,26 +47,29 @@ app.use('/cart', cartRoutes);
 app.use('/orders', orderRouter);
 app.use('/upload', uploadRouter);
 
-const PORT = 5000;
-
-// Создаем HTTP сервер
-const server = http.createServer(app);
-
-// Запускаем сервер
-server.listen(PORT, () => {
-    console.log(`✅ HTTP сервер запущен на порту ${PORT}`);
+// HTTP server (порт 5000)
+const HTTP_PORT = 5000;
+http.createServer(app).listen(HTTP_PORT, () => {
+    console.log(`🌐 HTTP сервер запущен на порту ${HTTP_PORT}`);
 });
 
-// Обработка ошибок сервера
-server.on('error', (error) => {
-    console.error('❌ Ошибка сервера:', error);
-});
+// HTTPS server (порт 443 или из .env)
+const HTTPS_PORT = process.env.HTTPS_PORT || 443;
+let httpsOptions;
 
-// Обработка необработанных исключений
-process.on('uncaughtException', (error) => {
-    console.error('❌ Необработанное исключение:', error);
-});
+try {
+    httpsOptions = {
+        key: fs.readFileSync(path.join(__dirname, 'server.key')),
+        cert: fs.readFileSync(path.join(__dirname, 'server.crt')),
+    };
 
-process.on('unhandledRejection', (error) => {
-    console.error('❌ Необработанное отклонение промиса:', error);
-});
+    https.createServer(httpsOptions, app).listen(HTTPS_PORT, () => {
+        console.log(`🔐 HTTPS сервер запущен на порту ${HTTPS_PORT}`);
+    });
+} catch (err) {
+    console.error("❌ Ошибка загрузки SSL-сертификатов:", err.message);
+}
+
+// Глобальная обработка ошибок
+process.on('uncaughtException', (error) => console.error('❌ Необработанное исключение:', error));
+process.on('unhandledRejection', (error) => console.error('❌ Необработанное отклонение промиса:', error));
