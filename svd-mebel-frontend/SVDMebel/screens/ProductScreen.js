@@ -2,29 +2,31 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, ActivityIndicator, StyleSheet, Image, TouchableOpacity, Animated } from 'react-native';
 import axios from 'axios';
 import { Ionicons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage'; // Импортируем AsyncStorage
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const ProductScreen = ({ route, navigation }) => {
   const { subcategoryId } = route.params;
   const [products, setProducts] = useState([]);
-  const [cartItemsFromServer, setCartItemsFromServer] = useState([]); // Состояние для товаров в корзине с сервера
+  const [cartItemsFromServer, setCartItemsFromServer] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [fadeAnim] = useState(new Animated.Value(0));
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isCheckingCart, setIsCheckingCart] = useState(true); // Состояние проверки корзины
+  const [isCheckingCart, setIsCheckingCart] = useState(true);
 
   useEffect(() => {
     const checkAuthAndFetch = async () => {
       const token = await AsyncStorage.getItem('token');
       const userId = await AsyncStorage.getItem('userId');
+
       if (token && userId) {
         setIsAuthenticated(true);
         fetchCartItems(userId, token);
       } else {
         setIsAuthenticated(false);
-        setIsCheckingCart(false); // Проверка не нужна, если не авторизован
+        setIsCheckingCart(false);
       }
+
       fetchProducts();
     };
 
@@ -54,9 +56,9 @@ const ProductScreen = ({ route, navigation }) => {
       const res = await axios.get(`http://192.168.230.67:5000/cart/${userId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setCartItemsFromServer(res.data.map(item => item.product_id)); // Сохраняем только ID товаров
+      setCartItemsFromServer(res.data.map(item => item.product_id));
     } catch (error) {
-      
+      console.error('Ошибка загрузки корзины:', error);
     } finally {
       setIsCheckingCart(false);
     }
@@ -65,7 +67,7 @@ const ProductScreen = ({ route, navigation }) => {
   const handleAddToCart = async (product) => {
     if (!isAuthenticated) {
       alert('Для добавления в корзину необходимо авторизоваться.');
-      navigation.navigate('Login'); // Или другой экран авторизации
+      navigation.navigate('Login');
       return;
     }
 
@@ -98,14 +100,25 @@ const ProductScreen = ({ route, navigation }) => {
 
   const renderItem = ({ item }) => {
     const isInCart = cartItemsFromServer.includes(item.id);
-    const isOutOfStock = item.stock_quantity === 0; // Проверяем, что stock_quantity равен 0
-
+    const isOutOfStock = item.stock_quantity === 0;
+  
+    // Проверяем, что ar_model_path существует и не пустой
+    const hasARModel = item.ar_model_path && item.ar_model_path.trim() !== '';
+  
     return (
       <TouchableOpacity
         style={styles.productItem}
         onPress={() => navigation.navigate('ProductDetail', { productId: item.id })}
         activeOpacity={0.9}
       >
+        {/* AR-метка — отображается только если hasARModel === true */}
+        {hasARModel && (
+          <View style={styles.arBadge}>
+            <Text style={styles.arText}>AR</Text>
+          </View>
+        )}
+  
+        {/* Основное содержимое карточки */}
         <Image source={{ uri: `http://192.168.230.67:5000${item.image}` }} style={styles.productImage} />
         <View style={styles.productDetails}>
           <Text style={styles.productName}>{item.name}</Text>
@@ -114,11 +127,11 @@ const ProductScreen = ({ route, navigation }) => {
             <Text style={styles.productRating}>{item.rating}</Text>
           </View>
           <Text style={styles.productPrice}>
-  {Math.floor(item.price)?.toLocaleString('ru-RU', {
-    maximumFractionDigits: 0,
-  })} ₸
- </Text>
-
+            {Math.floor(item.price)?.toLocaleString('ru-RU', {
+              maximumFractionDigits: 0,
+            })} ₸
+          </Text>
+  
           {isOutOfStock ? (
             <View style={styles.outOfStockContainer}>
               <Text style={styles.outOfStockText}>Нет в наличии</Text>
@@ -144,7 +157,7 @@ const ProductScreen = ({ route, navigation }) => {
       </TouchableOpacity>
     );
   };
-
+  
   if (loading) {
     return <ActivityIndicator size="large" color="#4CAF50" />;
   }
@@ -163,6 +176,7 @@ const ProductScreen = ({ route, navigation }) => {
   );
 };
 
+// Стили
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -181,6 +195,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 6,
     elevation: 3,
+    position: 'relative', // Важно для AR-метки
   },
   productImage: {
     width: 100,
@@ -235,16 +250,37 @@ const styles = StyleSheet.create({
     marginVertical: 10,
   },
   outOfStockContainer: {
-    backgroundColor: '#FFCDD2', // Светло-красный цвет для фона
+    backgroundColor: '#FFCDD2',
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 6,
     alignItems: 'center',
   },
   outOfStockText: {
-    color: '#D32F2F', // Темно-красный цвет для текста
+    color: '#D32F2F',
     fontSize: 14,
     fontWeight: '600',
+  },
+  // Стили для AR-метки
+  arBadge: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    backgroundColor: '#FFEB3B',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    zIndex: 1,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+  },
+  arText: {
+    color: '#000',
+    fontSize: 12,
+    fontWeight: 'bold',
   },
 });
 

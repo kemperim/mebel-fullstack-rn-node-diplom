@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, Image, ScrollView, StyleSheet, TouchableOpacity, Dimensions, FlatList } from 'react-native';
+import { View, Text, Image, ScrollView, StyleSheet, TouchableOpacity, Dimensions, FlatList, Linking } from 'react-native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
@@ -125,7 +125,7 @@ const ProductDetailScreen = ({ route }) => {
     if (viewableItems.length > 0) {
       const index = viewableItems[0].index;
       setCurrentImageIndex(index);
-      thumbnailRef.current?.scrollToIndex({ 
+      thumbnailRef.current?.scrollToIndex({
         index,
         animated: true,
         viewPosition: 0.5
@@ -160,6 +160,13 @@ const ProductDetailScreen = ({ route }) => {
       />
     </TouchableOpacity>
   );
+
+  const handleArView = () => {
+    if (product?.ar_model_path) {
+      const arUrl = `https://192.168.230.67:443/web/ar.html?model=${encodeURIComponent(product.ar_model_path)}`;
+      Linking.openURL(arUrl).catch(err => console.error('An error occurred opening the AR link:', err));
+    }
+  };
 
   return (
     <View style={styles.wrapper}>
@@ -240,7 +247,7 @@ const ProductDetailScreen = ({ route }) => {
                     {product.attributes.map((attr, index) => (
                       <View key={index} style={styles.attributeItem}>
                         <View style={styles.attributeNameContainer}>
-                         
+
                           <Text style={styles.attributeName}>{attr.name}</Text>
                         </View>
                         <Text style={styles.attributeValue}>{attr.value}</Text>
@@ -248,6 +255,13 @@ const ProductDetailScreen = ({ route }) => {
                     ))}
                   </View>
                 </View>
+              )}
+
+              {product?.ar_model_path && (
+                <TouchableOpacity style={styles.arButton} onPress={handleArView}>
+                  <Ionicons name="cube-outline" size={20} color="#FFFFFF" style={{ marginRight: 8 }} />
+                  <Text style={styles.arButtonText}>Просмотр в AR</Text>
+                </TouchableOpacity>
               )}
             </View>
           </View>
@@ -322,7 +336,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'top',
     backgroundColor: 'white',
-  
+
   },
   productImage: {
     width: '100%',
@@ -486,8 +500,7 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 4,
   },
-  cartIcon: {
-    marginRight: 8,
+  cartIcon: {marginRight: 8,
   },
   addedButton: {
     backgroundColor: '#E0E0E0',
@@ -505,6 +518,25 @@ const styles = StyleSheet.create({
   },
   disabledText: {
     color: '#FFFFFF',
+  },
+  arButton: {
+    backgroundColor: '#2196F3',
+    padding: 16,
+    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#2196F3',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 3,
+    marginBottom: 20,
+  },
+  arButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
 

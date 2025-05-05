@@ -130,9 +130,9 @@ const CartScreen = ({ navigation }) => {
     return (
       <Animated.View style={styles.cartItem}>
         <View style={styles.imageContainer}>
-          <Image 
-            source={{ uri: `http://192.168.230.67:5000${item.Product.image}` }} 
-            style={styles.productImage} 
+          <Image
+            source={{ uri: `http://192.168.230.67:5000${item.Product.image}` }}
+            style={styles.productImage}
           />
           {isOutOfStock && (
             <View style={styles.outOfStockBadge}>
@@ -143,7 +143,7 @@ const CartScreen = ({ navigation }) => {
         <View style={styles.productInfo}>
           <View style={styles.productHeader}>
             <Text style={styles.productName} numberOfLines={2}>{item.Product.name}</Text>
-            <Text style={styles.productPrice}>{item.Product.price} ₽</Text>
+            <Text style={styles.productPrice}>{item.Product.price} ₸</Text>
           </View>
           {!isOutOfStock && (
             <View style={styles.controlsRow}>
@@ -238,7 +238,7 @@ const CartScreen = ({ navigation }) => {
           <View style={styles.footer}>
             <View style={styles.totalContainer}>
               <Text style={styles.totalLabel}>Итого:</Text>
-              <Text style={styles.totalAmount}>{total} ₽</Text>
+              <Text style={styles.totalAmount}>{total} ₸</Text>
             </View>
             <TouchableOpacity
               style={styles.checkoutButton}

@@ -543,6 +543,8 @@ const styles = StyleSheet.create({
         marginRight: 16,
         borderWidth: 1.5,
         borderColor: '#E0E0E0',
+        marginLeft: 10,
+        marginTop:10,
     },
     imageDeleteButton: {
         position: 'absolute',
@@ -559,6 +561,8 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.2,
         shadowRadius: 4,
         elevation: 4,
+        marginTop:10,
+        marginRight:10,
     },
 });
 
