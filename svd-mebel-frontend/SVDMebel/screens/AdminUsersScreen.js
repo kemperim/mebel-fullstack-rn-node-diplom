@@ -30,7 +30,7 @@ const AdminUsersScreen = () => {
     try {
       setLoading(true);
       const token = await AsyncStorage.getItem("token");
-      const response = await axios.get("http://192.168.230.67:5000/admin/users", {
+      const response = await axios.get("http://192.168.217.67:5000/admin/users", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setUsers(response.data);
@@ -63,7 +63,7 @@ const AdminUsersScreen = () => {
       const token = await AsyncStorage.getItem("token");
       console.log("Отправка обновления пользователя:", selectedUser);
       await axios.put(
-        `http://192.168.230.67:5000/admin/users/${selectedUser.id}`,
+        `http://192.168.217.67:5000/admin/users/${selectedUser.id}`,
         {
           name: selectedUser.name,
           email: selectedUser.email,
@@ -87,7 +87,7 @@ const AdminUsersScreen = () => {
     try {
       const token = await AsyncStorage.getItem("token");
       await axios.put(
-        `http://192.168.230.67:5000/admin/users/${selectedUser.id}/block`,
+        `http://192.168.217.67:5000/admin/users/${selectedUser.id}/block`,
         { isBlocked: !selectedUser.isBlocked },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -108,7 +108,7 @@ const AdminUsersScreen = () => {
         onPress: async () => {
           try {
             const token = await AsyncStorage.getItem("token");
-            await axios.delete(`http://192.168.230.67:5000/admin/users/${selectedUser.id}`, {
+            await axios.delete(`http://192.168.217.67:5000/admin/users/${selectedUser.id}`, {
               headers: { Authorization: `Bearer ${token}` },
             });
   

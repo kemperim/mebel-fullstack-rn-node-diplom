@@ -31,7 +31,7 @@ const ProductDetailScreen = ({ route }) => {
           setIsAuthenticated(false);
         }
 
-        const res = await axios.get(`http://192.168.230.67:5000/products/product/${productId}`, {
+        const res = await axios.get(`http://192.168.217.67:5000/products/product/${productId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setProduct(res.data);
@@ -55,7 +55,7 @@ const ProductDetailScreen = ({ route }) => {
           return;
         }
 
-        const cartRes = await axios.get(`http://192.168.230.67:5000/cart/${userId}`, {
+        const cartRes = await axios.get(`http://192.168.217.67:5000/cart/${userId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -95,7 +95,7 @@ const ProductDetailScreen = ({ route }) => {
     try {
       const token = await AsyncStorage.getItem('token');
       const response = await axios.post(
-        `http://192.168.230.67:5000/cart/add`,
+        `http://192.168.217.67:5000/cart/add`,
         { productId, quantity: 1 },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -138,7 +138,7 @@ const ProductDetailScreen = ({ route }) => {
   const renderImageItem = ({ item }) => (
     <View style={styles.sliderItem}>
       <Image
-        source={{ uri: `http://192.168.230.67:5000${item}` }}
+        source={{ uri: `http://192.168.217.67:5000${item}` }}
         style={styles.productImage}
         resizeMode="contain"
       />
@@ -154,7 +154,7 @@ const ProductDetailScreen = ({ route }) => {
       ]}
     >
       <Image
-        source={{  uri: `http://192.168.230.67:5000${item}`}}
+        source={{  uri: `http://192.168.217.67:5000${item}`}}
         style={styles.thumbnail}
         resizeMode="cover"
       />
@@ -163,7 +163,7 @@ const ProductDetailScreen = ({ route }) => {
 
   const handleArView = () => {
     if (product?.ar_model_path) {
-      const arUrl = `https://192.168.230.67:443/web/ar.html?model=${encodeURIComponent(product.ar_model_path)}`;
+      const arUrl = `https://192.168.217.67:443/web/ar.html?model=${encodeURIComponent(product.ar_model_path)}`;
       Linking.openURL(arUrl).catch(err => console.error('An error occurred opening the AR link:', err));
     }
   };

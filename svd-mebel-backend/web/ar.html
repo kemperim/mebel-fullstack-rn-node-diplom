@@ -1,352 +1,76 @@
 <!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <title>AR: Размещение, Удаление и Перемещение</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        body { margin: 0; overflow: hidden; display: flex; justify-content: center; align-items: center; min-height: 100vh; background-color: #fff; color: #333; font-family: sans-serif; }
-        #ar-container { position: relative; }
-        canvas { display: block; position: absolute; top: 0; left: 0; }
-        #initial-ui { background-color: rgba(255, 255, 255, 0.9); padding: 30px; border-radius: 10px; text-align: center; }
-        h1 { margin-top: 0; color: #333; }
-        p { color: #666; margin-bottom: 20px; }
-        .ar-button {
-            padding: 12px 24px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 18px;
-            transition: background-color 0.3s ease;
-            margin: 5px;
-            touch-action: manipulation; /* Поддержка сенсорных событий */
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>AR.js GLB Model Drag</title>
+    <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.2/aframe/build/aframe-ar.min.js"></script>
+
+    <!-- Жесты и перетаскивание -->
+    <script src="https://unpkg.com/aframe-gesture-detector/dist/aframe-gesture-detector.min.js"></script>
+    <script src="https://unpkg.com/aframe-super-hands-component/dist/aframe-super-hands.min.js"></script>
+  </head>
+
+  <body style="margin: 0; overflow: hidden;">
+    <button id="start-btn" style="position: absolute; z-index: 10; padding: 10px;">Запустить AR</button>
+    <button id="delete-btn" style="display: none; position: absolute; top: 50px; z-index: 10;">Удалить модель</button>
+
+    <a-scene
+      id="ar-scene"
+      embedded
+      vr-mode-ui="enabled: false"
+      renderer="logarithmicDepthBuffer: true;"
+      arjs="sourceType: webcam; debugUIEnabled: false;"
+      style="display: none;"
+    >
+      <a-assets>
+        <!-- Пример пути, замени на свой -->
+        <a-asset-item id="modelGLB" src="models/example-model.glb"></a-asset-item>
+      </a-assets>
+
+      <a-marker id="marker" preset="hiro">
+        <!-- Сюда добавим модель -->
+      </a-marker>
+
+      <a-entity camera></a-entity>
+      <a-entity super-hands></a-entity>
+    </a-scene>
+
+    <script>
+      const startBtn = document.getElementById("start-btn");
+      const deleteBtn = document.getElementById("delete-btn");
+      const scene = document.getElementById("ar-scene");
+      const marker = document.getElementById("marker");
+
+      let model = null;
+
+      startBtn.onclick = () => {
+        scene.style.display = "block";
+        startBtn.style.display = "none";
+        deleteBtn.style.display = "block";
+
+        // Создаем и добавляем модель
+        model = document.createElement("a-entity");
+        model.setAttribute("gltf-model", "#modelGLB");
+        model.setAttribute("position", "0 0 0");
+        model.setAttribute("scale", "0.5 0.5 0.5");
+
+        // Подключаем перетаскивание
+        model.setAttribute("class", "draggable");
+        model.setAttribute("grabbable", "");
+        model.setAttribute("draggable", "");
+        model.setAttribute("gesture-handler", "");
+
+        marker.appendChild(model);
+      };
+
+      deleteBtn.onclick = () => {
+        if (model) {
+          model.parentNode.removeChild(model);
+          model = null;
         }
-        .ar-button:hover { background-color: #0056b3; }
-        #ar-controls {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            z-index: 1000; /* Кнопки поверх AR */
-        }
-        #model-path-display { margin-bottom: 10px; font-size: 16px; color: #555; } /* Стиль для отображения пути */
-    </style>
-    <script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
-    <script type="importmap">
-        {
-            "imports": {
-                "three": "https://unpkg.com/three@0.163.0/build/three.module.js",
-                "three/addons/": "https://unpkg.com/three@0.163.0/examples/jsm/"
-            }
-        }
+      };
     </script>
-</head>
-<body>
-    <div id="ar-container">
-        <div id="initial-ui">
-            <h1>AR Размещение Объекта</h1>
-            <p>Нажмите кнопку ниже, чтобы начать AR.</p>
-            <div id="model-path-display"></div>
-            <button id="start-ar-button" class="ar-button">Начать AR</button>
-        </div>
-        <canvas id="ar-canvas" style="display: none;"></canvas>
-        <div id="ar-controls" style="display: none;">
-            <button id="delete-object-button" class="ar-button">Удалить Объект</button>
-        </div>
-    </div>
-
-    <script type="module">
-        import * as THREE from 'three';
-        import { ARButton } from 'three/addons/webxr/ARButton.js';
-        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-        import { DragControls } from 'three/addons/controls/DragControls.js';
-
-        let camera, scene, arRenderer;
-        let reticle, hitTestSource = null, hitTestSourceRequested = false;
-        let model = null; // Оригинальная модель
-        let placedModel = null; // Клонированная модель для размещения
-        let dragControls = null;
-
-        // DOM-элементы
-        const initialUI = document.getElementById('initial-ui');
-        const arContainer = document.getElementById('ar-container');
-        const startArButton = document.getElementById('start-ar-button');
-        const arCanvas = document.getElementById('ar-canvas');
-        const arControls = document.getElementById('ar-controls');
-        const deleteObjectButton = document.getElementById('delete-object-button');
-        const modelPathDisplay = document.getElementById('model-path-display');
-
-        // Получаем параметр model из URL
-        const urlParams = new URLSearchParams(window.location.search);
-        const modelPathFromURL = urlParams.get('model');
-        const defaultModelPath = 'https://192.168.230.67:443/uploads/3d/stool.glb'; // Оставляем стандартный путь
-
-        const modelPath = modelPathFromURL ? decodeURIComponent(modelPathFromURL) : defaultModelPath;
-
-        // Выводим значение modelPath
-        if (modelPathDisplay) {
-            modelPathDisplay.textContent = `Путь к модели: ${modelPath}`;
-        }
-
-        // === Инициализация AR ===
-        function initAR(modelPath) {
-            // Создание сцены и камеры
-            scene = new THREE.Scene();
-            camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 20);
-            arRenderer = new THREE.WebGLRenderer({ canvas: arCanvas, antialias: true, alpha: true });
-            arRenderer.setSize(window.innerWidth, window.innerHeight);
-            arRenderer.setPixelRatio(window.devicePixelRatio);
-            arRenderer.xr.enabled = true;
-            scene.background = null;
-
-            // Освещение
-            const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
-            light.position.set(0.5, 1, 0.25);
-            scene.add(light);
-
-            // Ретикул (точка наведения)
-            const geometry = new THREE.RingGeometry(0.05, 0.06, 32).rotateX(-Math.PI / 2);
-            const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-            reticle = new THREE.Mesh(geometry, material);
-            reticle.matrixAutoUpdate = false;
-            reticle.visible = false;
-            scene.add(reticle);
-
-            // Загрузка модели для AR
-            const loader = new GLTFLoader();
-            loader.load(modelPath, (glb) => {
-                model = glb.scene;
-
-                // *** Задаем параметры большого стола (масштабирование) ***
-                const scaleFactor = 2.0; // Увеличиваем размер в 2 раза по всем осям
-                model.scale.set(scaleFactor, scaleFactor, scaleFactor);
-
-                // *** Другие параметры объекта можно задавать здесь ***
-                // Например, изменить положение по умолчанию:
-                // model.position.set(0, 0.5, 0);
-                // Или вращение:
-                // model.rotation.y = Math.PI / 4;
-
-            }, (xhr) => {
-                console.log((xhr.loaded / xhr.total * 100) + '% loaded (AR)');
-            }, (error) => {
-                console.error('An error happened (AR):', error);
-            });
-
-            // Кнопка AR
-            const arButton = ARButton.createButton(arRenderer, { requiredFeatures: ['hit-test'] });
-            arButton.classList.add('ar-button');
-            arButton.style.display = 'none';
-            arContainer.appendChild(arButton);
-
-            // === Обработчики событий ===
-            // Размещение объекта по клику
-            window.addEventListener('click', () => {
-                if (arRenderer.xr.isPresenting && reticle.visible && model) {
-                    // Удаляем предыдущий объект, если он есть
-                    if (placedModel) {
-                        scene.remove(placedModel);
-                        disposeObject(placedModel);
-                        placedModel = null;
-
-                        if (dragControls) {
-                            dragControls.dispose();
-                            dragControls = null;
-                        }
-                    }
-
-                    // Клонируем модель
-                    placedModel = model.clone();
-                    placedModel.position.setFromMatrixPosition(reticle.matrix);
-                    scene.add(placedModel);
-
-                    // Показываем кнопки
-                    arControls.style.display = 'flex';
-
-                    // Инициализируем DragControls
-                    initDragControls(placedModel);
-                }
-            });
-
-            // Начало AR-сессии
-            arRenderer.xr.addEventListener('sessionstart', () => {
-                hitTestSourceRequested = false;
-                hitTestSource = null;
-                reticle.visible = true;
-                initialUI.style.display = 'none';
-                arCanvas.style.display = 'block';
-                arButton.style.display = 'block';
-
-                // Очистка предыдущих данных
-                if (dragControls) {
-                    dragControls.dispose();
-                    dragControls = null;
-                }
-                if (placedModel) {
-                    scene.remove(placedModel);
-                    disposeObject(placedModel);
-                    placedModel = null;
-                }
-                arControls.style.display = 'none';
-            });
-
-            // Окончание AR-сессии
-            arRenderer.xr.addEventListener('sessionend', () => {
-                if (dragControls) {
-                    dragControls.dispose();
-                    dragControls = null;
-                }
-                if (placedModel) {
-                    scene.remove(placedModel);
-                    disposeObject(placedModel);
-                    placedModel = null;
-                }
-                arControls.style.display = 'none';
-                window.location.reload();
-            });
-
-            // Анимационный цикл
-            arRenderer.setAnimationLoop(render);
-        }
-
-        // === DragControls ===
-        function initDragControls(object) {
-            if (!object) return;
-
-            // Очистка предыдущих контроллеров
-            if (dragControls) {
-                dragControls.dispose();
-                dragControls = null;
-            }
-
-            // Инициализация новых контроллеров
-            dragControls = new DragControls([object], camera, arRenderer.domElement);
-
-            // Ограничение перемещения по плоскости
-            dragControls.transformGroup = true;
-
-            // Визуальные эффекты
-            dragControls.addEventListener('dragstart', () => {
-                arRenderer.domElement.style.cursor = 'grabbing';
-            });
-
-            dragControls.addEventListener('dragend', () => {
-                arRenderer.domElement.style.cursor = 'grab';
-            });
-
-            // Поддержка touch-событий
-            arRenderer.domElement.addEventListener('touchstart', (e) => {
-                if (e.touches.length === 1) {
-                    const touch = e.touches[0];
-                    const mouseEvent = new MouseEvent('mousedown', {
-                        clientX: touch.clientX,
-                        clientY: touch.clientY
-                    });
-                    arRenderer.domElement.dispatchEvent(mouseEvent);
-                }
-            });
-
-            arRenderer.domElement.addEventListener('touchmove', (e) => {
-                if (e.touches.length === 1) {
-                    const touch = e.touches[0];
-                    const mouseEvent = new MouseEvent('mousemove', {
-                        clientX: touch.clientX,
-                        clientY: touch.clientY
-                    });
-                    arRenderer.domElement.dispatchEvent(mouseEvent);
-                }
-            });
-
-            arRenderer.domElement.addEventListener('touchend', () => {
-                const mouseEvent = new MouseEvent('mouseup');
-                arRenderer.domElement.dispatchEvent(mouseEvent);
-            });
-        }
-
-        // === Удаление объекта ===
-        deleteObjectButton.addEventListener('click', () => {
-            if (placedModel) {
-                scene.remove(placedModel);
-                disposeObject(placedModel);
-                placedModel = null;
-
-                if (dragControls) {
-                    dragControls.dispose();
-                    dragControls = null;
-                }
-
-                arControls.style.display = 'none';
-            }
-        });
-
-        // === Рендеринг ===
-        function render(timestamp, frame) {
-            if (!arRenderer.xr.isPresenting || !frame) return;
-
-            const referenceSpace = arRenderer.xr.getReferenceSpace();
-            const session = arRenderer.xr.getSession();
-
-            if (!hitTestSourceRequested) {
-                session.requestReferenceSpace('viewer').then(refSpace => {
-                    session.requestHitTestSource({ space: refSpace }).then(source => {
-                        hitTestSource = source;
-                    });
-                });
-                hitTestSourceRequested = true;
-            }
-
-            if (hitTestSource) {
-                const hitTestResults = frame.getHitTestResults(hitTestSource);
-                if (hitTestResults.length > 0) {
-                    const hit = hitTestResults[0];
-                    const pose = hit.getPose(referenceSpace);
-                    reticle.visible = true;
-                    reticle.matrix.fromArray(pose.transform.matrix);
-                } else {
-                    reticle.visible = false;
-                }
-            }
-            arRenderer.render(scene, camera);
-        }
-
-        // === Вспомогательная функция для очистки ресурсов объекта ===
-        function disposeObject(object) {
-            object.traverse((child) => {
-                if (child.isMesh) {
-                    child.geometry.dispose();
-                    if (child.material.isMaterial) {
-                        child.material.dispose();
-                    } else if (Array.isArray(child.material)) {
-                        child.material.forEach(m => m.dispose());
-                    }
-                }
-            });
-        }
-
-        // === Обработчики событий ===
-        // Изменение размеров
-        window.addEventListener('resize', () => {
-            if (arRenderer) {
-                camera.aspect = window.innerWidth / window.innerHeight;
-                camera.updateProjectionMatrix();
-                arRenderer.setSize(window.innerWidth, window.innerHeight);
-            }
-        });
-
-        // Запуск AR
-        startArButton.addEventListener('click', () => {
-            initialUI.style.display = 'none';
-            arCanvas.style.display = 'block';
-            initAR(modelPath); // Передаем путь к модели при инициализации AR
-
-            const arButtonElement = document.querySelector('.ar-button');
-            if (arButtonElement) {
-                arButtonElement.click();
-            }
-        });
-    </script>
-</body>
+  </body>
 </html>
+ 
