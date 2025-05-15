@@ -28,7 +28,7 @@ const ProfileScreen = ({ navigation }) => {
     const [isEditingPhone, setIsEditingPhone] = useState(false);
     const [cartItems, setCartItems] = useState([]);
 
-    const arPageURL = 'https://192.168.217.67:443/web/ar.html';
+    const arPageURL = 'https://192.168.59.67:443/web/ar.html';
 
     const handleOpenAR = useCallback(() => {
       Linking.canOpenURL(arPageURL)
@@ -53,7 +53,7 @@ const ProfileScreen = ({ navigation }) => {
         try {
             const token = await AsyncStorage.getItem("token");
             if (token) {
-                const response = await axios.get("http://192.168.217.67:5000/auth/me", {
+                const response = await axios.get("http://192.168.59.67:5000/auth/me", {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 setUser(response.data);
@@ -61,7 +61,7 @@ const ProfileScreen = ({ navigation }) => {
                 setPhone(response.data.phone || "");
 
                 const userId = response.data.id;
-                const cartResponse = await axios.get(`http://192.168.217.67:5000/cart/${userId}`, {
+                const cartResponse = await axios.get(`http://192.168.59.67:5000/cart/${userId}`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 const cartItemsData = cartResponse.data.map(item => item.Product);
@@ -100,7 +100,7 @@ const ProfileScreen = ({ navigation }) => {
         try {
             const token = await AsyncStorage.getItem("token");
             await axios.put(
-                "http://192.168.217.67:5000/user/profile/address",
+                "http://192.168.59.67:5000/user/profile/address",
                 { address },
                 {
                     headers: { Authorization: `Bearer ${token}` },
@@ -120,7 +120,7 @@ const ProfileScreen = ({ navigation }) => {
         try {
             const token = await AsyncStorage.getItem("token");
             await axios.put(
-                "http://192.168.217.67:5000/user/profile/phone",
+                "http://192.168.59.67:5000/user/profile/phone",
                 { phone },
                 {
                     headers: { Authorization: `Bearer ${token}` },
@@ -140,7 +140,7 @@ const ProfileScreen = ({ navigation }) => {
             style={styles.cartItem}
             onPress={() => navigation.navigate("ProductDetail", { productId: item.id })}
         >
-            <Image source={{ uri: `http://192.168.217.67:5000${item.image}`  }} style={styles.cartItemImage} />
+            <Image source={{ uri: `http://192.168.59.67:5000${item.image}`  }} style={styles.cartItemImage} />
             <Text style={styles.cartItemName}>{item.name}</Text>
             <Text style={styles.cartItemPrice}>{item.price}</Text>
         </TouchableOpacity>

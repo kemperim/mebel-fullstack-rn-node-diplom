@@ -12,7 +12,7 @@ const WebPageScreen = () => {
   return (
     <View style={styles.container}>
       <WebView
-        source={{ uri: 'https://192.168.230.67:443/web/ar.html' }} // твой локальный сервер
+        source={{ uri: 'https://192.168.59.67:443/web/ar.html' }} // твой локальный сервер
         style={{ flex: 1 }}
         originWhitelist={['*']}
         javaScriptEnabled={true}

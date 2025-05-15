@@ -24,7 +24,7 @@ const AdminAllProducts = () => {
     useEffect(() => {
         const fetchProducts = async () => {
             try {
-                const response = await axios.get('http://192.168.230.67:5000/products/products');
+                const response = await axios.get('http://192.168.59.67:5000/products/products');
                 setProducts(response.data);
             } catch (err) {
                 console.error('Ошибка при загрузке товаров:', err);
@@ -50,7 +50,7 @@ const AdminAllProducts = () => {
                 <View style={styles.imageContainer}>
                     {item.images?.length > 0 || item.image ? (
                         <Image
-                            source={{ uri: `http://192.168.230.67:5000${item.image}` }}
+                            source={{ uri: `http://192.168.59.67:5000${item.image}` }}
                             style={styles.image}
                             resizeMode="cover"
                         />

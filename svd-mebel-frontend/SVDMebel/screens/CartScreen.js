@@ -52,7 +52,7 @@ const CartScreen = ({ navigation }) => {
         return;
       }
 
-      const response = await axios.get(`http://192.168.217.67:5000/cart/${userId}`, {
+      const response = await axios.get(`http://192.168.59.67:5000/cart/${userId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -97,7 +97,7 @@ const CartScreen = ({ navigation }) => {
         console.log('Нет токена, пользователь не авторизован');
         return;
       }
-      await axios.put(`http://192.168.217.67:5000/cart/update/${itemId}`, {
+      await axios.put(`http://192.168.59.67:5000/cart/update/${itemId}`, {
         quantity: newQuantity
       }, {
         headers: { Authorization: `Bearer ${token}` }
@@ -115,7 +115,7 @@ const CartScreen = ({ navigation }) => {
         console.log('Нет токена, пользователь не авторизован');
         return;
       }
-      await axios.delete(`http://192.168.217.67:5000/cart/remove/${itemId}`, {
+      await axios.delete(`http://192.168.59.67:5000/cart/remove/${itemId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       fetchCart();
@@ -131,7 +131,7 @@ const CartScreen = ({ navigation }) => {
       <Animated.View style={styles.cartItem}>
         <View style={styles.imageContainer}>
           <Image
-            source={{ uri: `http://192.168.217.67:5000${item.Product.image}` }}
+            source={{ uri: `http://192.168.59.67:5000${item.Product.image}` }}
             style={styles.productImage}
           />
           {isOutOfStock && (

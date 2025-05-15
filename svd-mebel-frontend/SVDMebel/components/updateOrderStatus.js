@@ -21,7 +21,7 @@ const updateOrderStatus = ({ route }) => {
   const fetchOrderDetails = useCallback(async () => {
     try {
       const token = await AsyncStorage.getItem('token');
-      const response = await axios.get(`http://192.168.230.67:5000/orders/order/${orderId}`, {
+      const response = await axios.get(`http://192.168.59.67:5000/orders/order/${orderId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -64,7 +64,7 @@ const updateOrderStatus = ({ route }) => {
   const updateOrderStatus = async () => {
     try {
       const token = await AsyncStorage.getItem('token');
-      await axios.put(`http://192.168.230.67:5000/admin/admin/orders/${order.id}/status`, 
+      await axios.put(`http://192.168.59.67:5000/admin/admin/orders/${order.id}/status`, 
         { status: selectedStatus },
         {
           headers: {
